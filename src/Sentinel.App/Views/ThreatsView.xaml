@@ -1,0 +1,451 @@
+<UserControl x:Class="Sentinel.App.Views.ThreatsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel>
+        <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Threats" FontSize="20" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding MachineLine}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="Refresh evidence" Click="Refresh_Click" Padding="10,4" Margin="0,0,6,0"
+                        AutomationProperties.Name="Refresh evidence"/>
+                <Button Content="Quick scan" Style="{StaticResource PrimaryButton}" Click="QuickScan_Click" Padding="10,4" Margin="0,0,6,0"
+                        AutomationProperties.Name="Defender quick scan"
+                        ToolTip="Opens the confirmation step, then asks Defender to quick-scan."/>
+                <Button Content="Full scan" Click="FullScan_Click" Padding="10,4" Margin="0,0,6,0"
+                        AutomationProperties.Name="Defender full scan"
+                        ToolTip="Opens the confirmation step, then asks Defender to full-scan."/>
+                <Button Content="Scan folder" Click="FolderScan_Click" Padding="10,4" Margin="0,0,6,0"
+                        AutomationProperties.Name="Defender folder scan"
+                        ToolTip="Opens the confirmation step, then asks Defender to scan a folder."/>
+                <Button Content="Offline scan" Click="OfflineScan_Click" Padding="10,4"
+                        AutomationProperties.Name="Defender offline scan"
+                        ToolTip="Opens the confirmation step (with restart acknowledgement) for an offline scan."/>
+            </StackPanel>
+        </Grid>
+        <!-- A09: refresh fault line (collapsed while fresh). -->
+        <TextBlock Style="{StaticResource RefreshErrorLine}" Text="{Binding RefreshState.Error}"/>
+            <TextBlock Style="{StaticResource RefreshLoadingLine}" Text="{Binding RefreshState.LoadingText}"/>
+        <TextBlock Text="{Binding ScanNote}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Visibility" Value="Visible"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ScanNote}" Value="">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+
+        <!-- Defender banner: green when protected, amber otherwise. -->
+        <Border BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,8">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+                    <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding RtpState}" Value="On">
+                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="{Binding Banner}" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding BannerDetail}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="16,0,16,0">
+                    <TextBlock Text="Virus &amp; threat definitions" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding DefinitionsLine}" FontWeight="SemiBold"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Defender last scan" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding DefenderScanLine}" FontWeight="SemiBold"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                Background="{DynamicResource SurfaceBrush}" Padding="12,6" Margin="0,0,0,8">
+            <TextBlock Text="Defender may quarantine detections under its protection policy. Sentinel AI does not remove files."
+                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+        </Border>
+
+        <TabControl x:Name="SectionsTab" AutomationProperties.Name="Threat sections">
+            <TabItem Header="Detections" AutomationProperties.Name="Detections tab">
+                <StackPanel>
+                    <!-- U24: detection timeline filters. -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <ComboBox ItemsSource="{Binding SeverityOptions}"
+                                  SelectedItem="{Binding DetectionSeverityFilter, Mode=TwoWay}"
+                                  Width="140" VerticalAlignment="Center"
+                                  AutomationProperties.Name="Detection severity filter"/>
+                        <TextBox Text="{Binding DetectionSearch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 Width="240" Margin="8,0,0,0" VerticalAlignment="Center"
+                                 AutomationProperties.Name="Detection search"/>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="340"/>
+                        </Grid.ColumnDefinitions>
+                        <DataGrid Grid.Column="0" ItemsSource="{Binding FilteredDetections}"
+                                  SelectedItem="{Binding SelectedDetection, Mode=TwoWay}"
+                                  Height="300" AutomationProperties.Name="Detections">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Threat" Binding="{Binding Threat}" Width="*"/>
+                                <DataGridTextColumn Header="Severity" Binding="{Binding Severity}" Width="100">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Severity}" Value="Severe">
+                                                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Severity}" Value="High">
+                                                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Severity}" Value="Medium">
+                                                    <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Resource" Binding="{Binding Path}" Width="*"/>
+                                <DataGridTextColumn Header="Detected" Binding="{Binding Detected}" Width="130"/>
+                                <DataGridTextColumn Header="Defender action" Binding="{Binding Action}" Width="150"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <Border Grid.Column="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                                Background="{DynamicResource SurfaceBrush}" Padding="12" VerticalAlignment="Top"
+                                AutomationProperties.Name="Detection evidence">
+                            <Grid>
+                                <TextBlock Text="Select a detection to inspect its evidence." FontStyle="Italic"
+                                           Foreground="{DynamicResource TextSecondaryBrush}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedDetection}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <StackPanel DataContext="{Binding SelectedDetection}">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                        <TextBlock Text="{Binding Threat}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                        <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="6" Padding="6,1" Margin="6,0,0,0"
+                                                VerticalAlignment="Center">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsTest}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="Test fixture" FontSize="12" Foreground="{DynamicResource AccentBrush}"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Severity, StringFormat=Severity: {0}}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="92"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Resource" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Path}" FontSize="12" FontFamily="{DynamicResource MonoFont}" TextWrapping="Wrap"/>
+                                        <Button Grid.Row="0" Grid.Column="2" Content="Copy" Click="CopyResource_Click" Padding="8,1" Margin="6,0,0,0"
+                                                AutomationProperties.Name="Copy resource path"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="SHA-256" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DataContext.DetectionEvidence.HashDisplay, RelativeSource={RelativeSource AncestorType=UserControl}}" FontSize="12" FontFamily="{DynamicResource MonoFont}" TextTrimming="CharacterEllipsis"/>
+                                        <Button Grid.Row="1" Grid.Column="2" Content="Copy" Click="CopyHash_Click" Padding="8,1" Margin="6,0,0,0"
+                                                AutomationProperties.Name="Copy detection hash"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Signature" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding DataContext.DetectionEvidence.SignedLine, RelativeSource={RelativeSource AncestorType=UserControl}}" FontSize="12" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Reported by" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Text="Microsoft Defender" FontSize="12"/>
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Detected" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Detected}" FontSize="12"/>
+                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Availability" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding DataContext.DetectionEvidence.AvailabilityLine, RelativeSource={RelativeSource AncestorType=UserControl}}" FontSize="12" TextWrapping="Wrap"/>
+                                    </Grid>
+                                    <TextBlock Text="Recommendation" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                                    <TextBlock Text="Review evidence" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    <UniformGrid Columns="2" Margin="0,8,0,0">
+                        <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                                Background="{DynamicResource SurfaceBrush}" Padding="12,8" Margin="0,0,6,0"
+                                AllowDrop="True" Drop="CheckFile_Drop" DragOver="CheckFile_DragOver">
+                            <StackPanel>
+                                <TextBlock Text="Check a file" FontWeight="SemiBold"/>
+                                <TextBlock Text="Inspect hash, signature and available evidence." FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                                <Button Content="Choose file" Click="ChooseFile_Click" Padding="10,2" HorizontalAlignment="Left"
+                                        AutomationProperties.Name="Choose file to check"/>
+                                <TextBlock Text="{Binding FileCheck.Title}" FontWeight="SemiBold" Margin="0,6,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding FileCheck}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding FileCheck}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                    <Run Text="{Binding FileCheck.HashDisplay, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding FileCheck.SignedLine, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding FileCheck.SizeLine, Mode=OneWay}"/>
+                                </TextBlock>
+                                <TextBlock Text="{Binding FileCheck.Explanation}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding FileCheck}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="{Binding FileCheck.SecondOpinion}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Foreground="{DynamicResource TextSecondaryBrush}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding FileCheck}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="Drag and drop a file here, or choose one. No complete sample upload — local analysis only."
+                                           FontSize="12" FontStyle="Italic" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                                Background="{DynamicResource SurfaceBrush}" Padding="12,8" Margin="6,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Persistence locations" FontWeight="SemiBold"/>
+                                <TextBlock Text="Common locations that can keep malware on your device." FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                                <TextBlock Text="{Binding RunKeyLine}" FontSize="12" Margin="0,0,0,2"/>
+                                <TextBlock Text="{Binding StartupFolderLine}" FontSize="12" Margin="0,0,0,2"/>
+                                <TextBlock Text="{Binding ServiceLine}" FontSize="12" Margin="0,0,0,2"/>
+                                <TextBlock Text="{Binding TaskLine}" FontSize="12" Margin="0,0,0,2"/>
+                                <TextBlock Text="{Binding ExtensionLine}" FontSize="12" Margin="0,0,0,2"/>
+                                <TextBlock Text="{Binding WmiLine}" FontSize="12" Margin="0,0,0,6"/>
+                                <Button Content="View all" Click="ViewPersistence_Click" Padding="10,2" HorizontalAlignment="Left"
+                                        AutomationProperties.Name="View all persistence"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Processes" AutomationProperties.Name="Processes tab">
+                <StackPanel>
+                    <DataGrid ItemsSource="{Binding Processes}" Height="300"
+                              SelectedItem="{Binding SelectedProcess, Mode=TwoWay}"
+                              AutomationProperties.Name="Threat processes">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="2*"/>
+                            <DataGridTextColumn Header="Company" Binding="{Binding Company}" Width="*"/>
+                            <DataGridTextColumn Header="Memory" Binding="{Binding Memory}" Width="80"/>
+                            <DataGridTextColumn Header="Started by" Binding="{Binding Parent}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Text="{Binding ProcessDetailLine}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"
+                               AutomationProperties.Name="Process detail">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </Trigger>
+                                    <Trigger Property="Text" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Watching" AutomationProperties.Name="Watching tab">
+                <StackPanel>
+                    <TextBlock Text="{Binding WatchLine}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4" TextWrapping="Wrap"/>
+                    <DataGrid ItemsSource="{Binding WatchFeed}" Height="300" AutomationProperties.Name="Watch cards">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Seen" Binding="{Binding Time}" Width="70"/>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Check" Binding="{Binding Verdict}" Width="130"/>
+                            <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="2*"/>
+                            <DataGridTextColumn Header="From" Binding="{Binding Source}" Width="70"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Text="Nothing new since the app opened — new processes and executables will appear here." FontStyle="Italic"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding WatchFeed.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Persistence" AutomationProperties.Name="Persistence tab">
+                <StackPanel>
+                    <DataGrid ItemsSource="{Binding Persistence}" Height="300"
+                              SelectedItem="{Binding SelectedPersistence, Mode=TwoWay}"
+                              AutomationProperties.Name="Persistence entries">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="130"/>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="*"/>
+                            <DataGridTextColumn Header="Check first" Binding="{Binding Suspicion}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Text="{Binding PersistenceDetailLine}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"
+                               AutomationProperties.Name="Persistence detail">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </Trigger>
+                                    <Trigger Property="Text" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Quarantine" AutomationProperties.Name="Quarantine tab">
+                <StackPanel>
+                    <DataGrid ItemsSource="{Binding Quarantine}" Height="260"
+                              SelectedItem="{Binding SelectedQuarantine, Mode=TwoWay}"
+                              AutomationProperties.Name="Quarantined items">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Threat" Binding="{Binding Threat}" Width="*"/>
+                            <DataGridTextColumn Header="Location" Binding="{Binding Resource}" Width="*"/>
+                            <DataGridTextColumn Header="Detected" Binding="{Binding Detected}" Width="130"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Text="{Binding QuarantineNote}" FontStyle="Italic"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="Wrap">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </Trigger>
+                                    <Trigger Property="Text" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding SelectedQuarantine.Explanation}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"
+                               AutomationProperties.Name="Quarantine explanation">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </Trigger>
+                                    <Trigger Property="Text" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                        <Button Content="Restore…" Click="Restore_Click" Padding="10,2" Margin="0,0,8,0"
+                                AutomationProperties.Name="Restore quarantined item"/>
+                        <Button Content="Keep quarantined" Click="Keep_Click" Padding="10,2" Margin="0,0,8,0"
+                                AutomationProperties.Name="Keep quarantined"/>
+                        <Button Content="Report to Microsoft…" Click="Report_Click" Padding="10,2"
+                                AutomationProperties.Name="Report to Microsoft"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding QuarantineActionNote}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               AutomationProperties.Name="Quarantine action note"/>
+                    <TextBlock Text="Defender owns quarantine — Sentinel restores only what is currently listed, with your confirmation." FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+        <TextBlock Text="{Binding Coverage}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,415 @@
+<UserControl x:Class="Sentinel.App.Views.OverviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel>
+        <!-- Page header (board 01): title + machine line left, last
+             scan right. Scan actions live in the global header only —
+             one scan surface, no duplicate triggers. -->
+        <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Overview" FontSize="20" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding MachineLine}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </StackPanel>
+            <TextBlock Grid.Column="1" Text="{Binding LastScanLine}" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+        </Grid>
+
+        <!-- A09: refresh fault line (collapsed while fresh). -->
+        <TextBlock Style="{StaticResource RefreshErrorLine}" Text="{Binding RefreshState.Error}"/>
+            <TextBlock Style="{StaticResource RefreshLoadingLine}" Text="{Binding RefreshState.LoadingText}"/>
+
+        <!-- Hero: last scan state. -->
+        <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                Background="{DynamicResource SurfaceBrush}" Padding="12" Margin="0,0,0,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20" Margin="0,0,12,0">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HeroIsOk}" Value="False">
+                                    <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock FontSize="20" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="✓"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AccentInkBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HeroIsOk}" Value="False">
+                                        <Setter Property="Text" Value="!"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding HeroTitle}" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding HeroDetail}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <Button Grid.Column="2" Content="Review coverage ›" Click="Coverage_Click"
+                        Style="{StaticResource LinkButton}" VerticalAlignment="Center"
+                        AutomationProperties.Name="Review coverage"/>
+            </Grid>
+        </Border>
+
+        <!-- Six organ cards (board 01). Each navigates to its page. -->
+        <ItemsControl ItemsSource="{Binding Organs}" Margin="0,0,0,8">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="6"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Margin="0,0,6,0" Padding="8" HorizontalContentAlignment="Stretch"
+                            Command="{Binding DataContext.OpenPageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                            CommandParameter="{Binding PageIndex}"
+                            AutomationProperties.Name="{Binding Title}"
+                            ToolTip="{Binding Detail}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="24" Height="24" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}">
+                                    <TextBlock Text="{Binding Badge}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource AccentInkBrush}"/>
+                                </Border>
+                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                <TextBlock Text="›" VerticalAlignment="Center" Margin="4,0,0,0"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Detail}" FontSize="12" Margin="0,4,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Findings to review. -->
+            <Border Grid.Column="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                    Background="{DynamicResource SurfaceBrush}" Padding="12">
+                <StackPanel>
+                    <TextBlock Text="Findings to review" FontSize="14" FontWeight="SemiBold"/>
+                    <TextBlock Text="Items that need your attention from this scan." FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                    <ItemsControl ItemsSource="{Binding Findings}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="70"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding Subtitle}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Background="{DynamicResource AccentSoftBrush}" CornerRadius="6"
+                                            Padding="8,2" Margin="0,0,8,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Pill}" FontSize="12" Foreground="{DynamicResource AccentInkBrush}"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="2" Text="{Binding Module}" FontSize="12" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <Button Grid.Column="3" Content="View ›" Style="{StaticResource LinkButton}" VerticalAlignment="Center"
+                                            Command="{Binding DataContext.OpenPageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding PageIndex}"
+                                            AutomationProperties.Name="View finding"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="No review items — nothing needs attention right now."
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontStyle="Italic">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasFindings}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+            <!-- Evidence relationships: possible links only, dashed,
+                 never confirmed (board 01, 09 §14 Task 8 rule). -->
+            <Border Grid.Column="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                    Background="{DynamicResource SurfaceBrush}" Padding="12">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Evidence relationships" FontSize="14" FontWeight="SemiBold"/>
+                        <Button Grid.Column="1" Content="Graph" Click="Graph_Click" Padding="10,2" Margin="0,0,4,0"
+                                AutomationProperties.Name="Graph view"/>
+                        <Button Grid.Column="2" Content="List" Click="List_Click" Padding="10,2" Margin="0,0,8,0"
+                                AutomationProperties.Name="List view"/>
+                        <!-- U21: graph zoom (pan is the scrollbars below). -->
+                        <Button Grid.Column="3" Content="A−" Command="{Binding ZoomOutCommand}" Padding="8,2" Margin="0,0,4,0"
+                                AutomationProperties.Name="Zoom out graph"/>
+                        <Button Grid.Column="4" Content="A+" Command="{Binding ZoomInCommand}" Padding="8,2" Margin="0,0,4,0"
+                                AutomationProperties.Name="Zoom in graph"/>
+                        <Button Grid.Column="5" Content="100%" Command="{Binding ZoomResetCommand}" Padding="8,2"
+                                AutomationProperties.Name="Reset graph zoom"/>
+                    </Grid>
+                    <TextBlock Text="Related items from this scan. This is a possible relationship, not a confirmed diagnosis."
+                               FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <Grid x:Name="GraphHost">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding RelationsGraphView}" Value="True"/>
+                                            <Condition Binding="{Binding HasClusters}" Value="True"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <StackPanel>
+                            <TextBlock Text="— Possible relationship —" FontSize="11" HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                          MaxHeight="260" AutomationProperties.Name="Relationship graph">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <StackPanel.LayoutTransform>
+                                        <ScaleTransform ScaleX="{Binding GraphZoom}" ScaleY="{Binding GraphZoom}"/>
+                                    </StackPanel.LayoutTransform>
+                                    <Button Background="Transparent" BorderThickness="0" Padding="0"
+                                            Command="{Binding InspectClusterCommand}" CommandParameter="{Binding FirstCluster}"
+                                            AutomationProperties.Name="Inspect relationship">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="6"
+                                                    Padding="8,6" MinWidth="90" Background="{DynamicResource SurfaceBrush}">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding FirstCluster.DeviceLabel}" FontWeight="SemiBold" FontSize="12" TextAlignment="Center" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding FirstCluster.DiskDetail}" FontSize="11" TextAlignment="Center"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <TextBlock Text="┄┄›" VerticalAlignment="Center" Margin="4,0"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <Border BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1" CornerRadius="6"
+                                                    Padding="8,6" MinWidth="90" Background="{DynamicResource SurfaceBrush}">
+                                                <StackPanel>
+                                                    <TextBlock Text="Disk events" FontWeight="SemiBold" FontSize="12" TextAlignment="Center"/>
+                                                    <TextBlock Text="{Binding FirstCluster.EventCount, StringFormat='{}{0} events'}" FontSize="11" TextAlignment="Center"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <TextBlock Text="┄┄›" VerticalAlignment="Center" Margin="4,0"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="6"
+                                                    Padding="8,6" MinWidth="90" Background="{DynamicResource SurfaceBrush}">
+                                                <StackPanel>
+                                                    <TextBlock Text="Newest report" FontWeight="SemiBold" FontSize="12" TextAlignment="Center"/>
+                                                    <TextBlock Text="{Binding FirstCluster.NewestSummary}" FontSize="11" TextAlignment="Center"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </ScrollViewer>
+                            <TextBlock Text="{Binding SelectedClusterDetail}" TextWrapping="Wrap" FontSize="12"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"
+                                       AutomationProperties.Name="Inspected relationship">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasSelectedCluster}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <Button Content="View evidence ›" Style="{StaticResource LinkButton}" HorizontalAlignment="Center" Margin="0,8,0,0"
+                                    Command="{Binding OpenPageCommand}"
+                                    CommandParameter="{Binding FirstCluster.DeviceLabel, StringFormat='5|{0}'}"
+                                    AutomationProperties.Name="View relationship evidence"/>
+                        </StackPanel>
+                    </Grid>
+                    <StackPanel>
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding RelationsGraphView}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <ItemsControl ItemsSource="{Binding Clusters}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,6" Orientation="Horizontal">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding DeviceLabel}" FontWeight="SemiBold" FontSize="12"/>
+                                            <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}">
+                                                <Run Text="{Binding EventCount, Mode=OneWay}"/> <Run Text="disk events ·"/> <Run Text="{Binding NewestSummary, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <Button Content="Inspect" Style="{StaticResource LinkButton}" Margin="8,0,0,0"
+                                                VerticalAlignment="Center"
+                                                Command="{Binding DataContext.InspectClusterCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}"
+                                                AutomationProperties.Name="Inspect relationship"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                    <TextBlock Text="No linked evidence in this scan — relationships appear when disk warnings and errors share a device."
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontStyle="Italic" TextWrapping="Wrap">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasClusters}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Scan coverage. -->
+            <Border Grid.Column="0" x:Name="CoverageSection" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                    Background="{DynamicResource SurfaceBrush}" Padding="12">
+                <StackPanel>
+                    <TextBlock Text="Scan coverage" FontSize="14" FontWeight="SemiBold"/>
+                    <TextBlock Text="Status of areas checked during this scan." FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                    <ItemsControl ItemsSource="{Binding Coverage}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Area}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Status}" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsOk}" Value="False">
+                                                        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <Button Grid.Column="2" Content="Details ›" Style="{StaticResource LinkButton}" VerticalAlignment="Center"
+                                            Command="{Binding DataContext.OpenPageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding PageIndex}"
+                                            AutomationProperties.Name="Coverage details"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Recent activity. -->
+            <Border Grid.Column="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                    Background="{DynamicResource SurfaceBrush}" Padding="12">
+                <StackPanel>
+                    <TextBlock Text="Recent activity" FontSize="14" FontWeight="SemiBold"/>
+                    <TextBlock Text="Latest scans and investigations." FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                    <ItemsControl ItemsSource="{Binding Activity}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button HorizontalContentAlignment="Stretch" Margin="0,0,0,4" Padding="4"
+                                        Command="{Binding DataContext.OpenPageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="6"
+                                        AutomationProperties.Name="{Binding Title}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Time}" FontFamily="{DynamicResource MonoFont}" FontSize="12"
+                                                   VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12"/>
+                                            <TextBlock Text="{Binding Detail}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Text="›" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="No activity yet — scans and investigations will appear here."
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontStyle="Italic">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasActivity}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </StackPanel>
+</UserControl>

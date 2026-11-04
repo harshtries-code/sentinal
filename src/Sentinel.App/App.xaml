@@ -1,0 +1,20 @@
+<Application x:Class="Sentinel.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Sentinel.App"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- [0] is the swappable theme (Dark/Light); code-behind
+                     replaces this entry on theme change. -->
+                <ResourceDictionary Source="Themes/Dark.xaml"/>
+                <ResourceDictionary Source="Themes/Controls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <local:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+            <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility"/>
+        <local:BulletPrefixConverter x:Key="BulletPrefix"/>
+        <local:EqualityConverter x:Key="Equality"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

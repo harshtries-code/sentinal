@@ -1,0 +1,395 @@
+<UserControl x:Class="Sentinel.App.Views.CleanerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="12"/>
+            <ColumnDefinition Width="340"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0">
+            <!-- Page header (board 02): title + scope left, last
+                 scan right. Scan actions live in the global header
+                 only — one scan surface (P1-06a rule). -->
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Storage" FontSize="20" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ScopeLine}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding LastScanLine}" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </Grid>
+
+            <!-- A09: refresh fault line (collapsed while fresh). -->
+            <TextBlock Style="{StaticResource RefreshErrorLine}" Text="{Binding RefreshState.Error}"/>
+            <TextBlock Style="{StaticResource RefreshLoadingLine}" Text="{Binding RefreshState.LoadingText}"/>
+
+            <!-- Summary strip: inventoried / to review /
+                 unavailable + the logical-size honesty note. -->
+            <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                    Background="{DynamicResource SurfaceBrush}" Padding="12,8" Margin="0,0,0,8">
+                <UniformGrid Columns="4">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Summary}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="inventoried" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="{Binding ReviewLine}" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="to review" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="{Binding UnavailableLine}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="unavailable" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                    <TextBlock Text="Logical size; allocated space can differ" FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                </UniformGrid>
+            </Border>
+
+            <!-- P22: sizing limits, always stated (sparse /
+                 placeholders / hard links / unreadable). -->
+            <TextBlock Text="{Binding LimitsLine}" FontSize="12" Margin="0,0,0,8"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
+                       AutomationProperties.Name="Sizing limits"/>
+
+            <!-- U22 (02 §7): storage map with Map/Table toggle.
+                 Both views show the same buckets; the ranked table
+                 keeps every box keyboard- and screen-reader-reachable
+                 (canvas rects are not UIA-visible). Clicking a box or
+                 a ranked row scopes the inventory table below. -->
+            <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                    Background="{DynamicResource SurfaceBrush}" Padding="8" Margin="0,0,0,8">
+                <StackPanel>
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Storage map" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="Map" Click="MapView_Click" Padding="10,2" Margin="0,0,4,0"
+                                    AutomationProperties.Name="Show storage map"/>
+                            <Button Content="Table" Click="TableView_Click" Padding="10,2"
+                                    AutomationProperties.Name="Show ranked table"/>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Visibility="{Binding ShowMap, Converter={StaticResource BoolToVisibility}}">
+                        <Canvas x:Name="TreemapCanvas" Height="170" SizeChanged="TreemapCanvas_SizeChanged"
+                                AutomationProperties.Name="Storage map"/>
+                        <TextBlock Text="No size data — run a scan first." FontStyle="Italic"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Treemap.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                    <DataGrid x:Name="RankedGrid" ItemsSource="{Binding RankedRows}" Height="170"
+                              AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                              SelectionMode="Single" SelectionChanged="RankedGrid_SelectionChanged"
+                              Visibility="{Binding ShowTable, Converter={StaticResource BoolToVisibility}}"
+                              AutomationProperties.Name="Ranked storage categories"
+                              ToolTip="Same buckets as the map — largest first. Select a row to show only those folders.">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Category" Binding="{Binding Key}" Width="*"/>
+                            <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="90"/>
+                            <DataGridTextColumn Header="Share" Binding="{Binding Share}" Width="70"/>
+                            <DataGridTextColumn Header="Files" Binding="{Binding Files}" Width="110"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- Filter chips + search. -->
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ListBox Grid.Column="0" ItemsSource="{Binding Chips}" SelectedItem="{Binding SelectedChip, Mode=TwoWay}"
+                         BorderThickness="0" Background="Transparent" Margin="0,0,8,0"
+                         AutomationProperties.Name="Storage filters"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                </ListBox>
+                <TextBox Grid.Column="1" Width="220" VerticalAlignment="Center"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="Search files and folders"
+                         AutomationProperties.Name="Search files and folders"/>
+            </Grid>
+
+            <!-- P22: folder scope from treemap drill-down. -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8"
+                        Visibility="{Binding HasFolderScope, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="{Binding FolderScopeLabel}" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <Button Content="Clear" Click="ClearScope_Click" Padding="8,2"
+                        AutomationProperties.Name="Clear folder scope"/>
+            </StackPanel>
+
+            <!-- Inventory table: checkbox + sortable columns.
+                 Never-tier checkboxes disable in the cell (02 §7 #6).
+                 Fixed height so the grid owns its scroll region. -->
+            <DataGrid x:Name="RowsGrid" ItemsSource="{Binding VisibleRows}"
+                      SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                      Height="340" Margin="0,0,0,8" IsReadOnly="False"
+                      AutomationProperties.Name="Storage inventory">
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Header="" Width="36"
+                                            Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <DataGridCheckBoxColumn.ElementStyle>
+                            <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+                                <Setter Property="IsEnabled" Value="{Binding IsSelectable}"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridCheckBoxColumn.ElementStyle>
+                        <DataGridCheckBoxColumn.EditingElementStyle>
+                            <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+                                <Setter Property="IsEnabled" Value="{Binding IsSelectable}"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridCheckBoxColumn.EditingElementStyle>
+                    </DataGridCheckBoxColumn>
+                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="90" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Classification" Binding="{Binding Classification}" Width="110" IsReadOnly="True"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- P22: bounded pages over the stated inventory. -->
+            <DockPanel LastChildFill="False" Margin="0,0,0,8">
+                <Button Content="‹ Prev" Click="PrevPage_Click" Margin="0,0,8,0"
+                        IsEnabled="{Binding HasPrevPage}"
+                        AutomationProperties.Name="Previous page"/>
+                <Button Content="Next ›" Click="NextPage_Click" Margin="0,0,12,0"
+                        IsEnabled="{Binding HasNextPage}"
+                        AutomationProperties.Name="Next page"/>
+                <TextBlock Text="{Binding PageLabel}" VerticalAlignment="Center"
+                           FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                           AutomationProperties.Name="Page position"/>
+            </DockPanel>
+
+            <!-- Selection bar: count + bytes + real actions. -->
+            <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                    Background="{DynamicResource SurfaceBrush}" Padding="12,8" Margin="0,0,0,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding CheckedLine}" VerticalAlignment="Center"/>
+                    <!-- E33: opens the Confirm Sheet for exactly the
+                         checked files. No select-all exists anywhere:
+                         the sheet approves the listed files only. -->
+                    <Button Grid.Column="1" Content="Move to Vault…" Click="VaultChecked_Click" Padding="10,2" Margin="0,0,6,0"
+                            Visibility="{Binding HasChecked, Converter={StaticResource BoolToVisibility}}"
+                            AutomationProperties.Name="Move selected files to Vault"/>
+                    <Button Grid.Column="2" Content="Copy paths" Click="CopyChecked_Click" Padding="10,2" Margin="0,0,6,0"
+                            Visibility="{Binding HasChecked, Converter={StaticResource BoolToVisibility}}"
+                            AutomationProperties.Name="Copy selected paths"/>
+                    <Button Grid.Column="3" Content="Clear" Click="ClearChecked_Click" Padding="10,2"
+                            Visibility="{Binding HasChecked, Converter={StaticResource BoolToVisibility}}"
+                            AutomationProperties.Name="Clear selection"/>
+                </Grid>
+            </Border>
+
+            <TextBlock Text="{Binding ActionStatusLine}" Margin="0,0,0,8"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActionStatusLine}" Value="">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <TextBlock Text="{Binding EmptyRowsText}" FontStyle="Italic"
+                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasVisibleRows}" Value="False">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <!-- System-managed files: honest notes + link-outs,
+                 never deletion (02 §7). Shown only when present. -->
+            <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                    Background="{DynamicResource SurfaceBrush}" Padding="12,8" Margin="0,0,0,8">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HibernationNote}" Value="{x:Null}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding HibernationNote}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="Open power settings" Click="PowerSettings_Click" Padding="10,2"
+                            AutomationProperties.Name="Open power settings"/>
+                </Grid>
+            </Border>
+            <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                    Background="{DynamicResource SurfaceBrush}" Padding="12,8" Margin="0,0,0,8">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding PagefileNote}" Value="{x:Null}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding PagefileNote}" TextWrapping="Wrap"/>
+                        <TextBlock Text="Advanced system settings › Performance › Settings › Advanced › Change" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Open system properties" Click="SystemProperties_Click" Padding="10,2"
+                            AutomationProperties.Name="Open system properties"/>
+                </Grid>
+            </Border>
+        </StackPanel>
+
+        <!-- Detail drawer: fields + guidance + evidence + copy.
+             Hint when nothing is selected. -->
+        <Border Grid.Column="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                Background="{DynamicResource SurfaceBrush}" Padding="12" VerticalAlignment="Top"
+                AutomationProperties.Name="Storage detail">
+            <Grid>
+                <TextBlock Text="Select a row to inspect it." FontStyle="Italic"
+                           Foreground="{DynamicResource TextSecondaryBrush}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedRow}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <StackPanel DataContext="{Binding SelectedRow}">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding Detail.TierLine}" FontSize="12" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Full path" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Detail.FullPath}" FontSize="12" FontFamily="{DynamicResource MonoFont}" TextWrapping="Wrap"/>
+                        <Button Grid.Row="0" Grid.Column="2" Content="Copy" Click="CopyDetailPath_Click" Padding="8,1" Margin="6,0,0,0"
+                                AutomationProperties.Name="Copy detail path"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Size" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Detail.Size}" FontSize="12"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Modified" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Detail.Modified}" FontSize="12"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Hash" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Detail.HashDisplay}" FontSize="12" FontFamily="{DynamicResource MonoFont}" TextTrimming="CharacterEllipsis"/>
+                        <Button Grid.Row="3" Grid.Column="2" Content="Copy" Click="CopyDetailHash_Click" Padding="8,1" Margin="6,0,0,0"
+                                AutomationProperties.Name="Copy detail hash"/>
+                    </Grid>
+                    <TextBlock Text="Regrowth" FontWeight="SemiBold" Margin="0,8,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Detail.Regrowth}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Detail.Regrowth}" FontSize="12" FontStyle="Italic" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Detail.Regrowth}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="What we know" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                    <TextBlock Text="{Binding Detail.KnowLine}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                    <TextBlock Text="What we could not verify" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                    <TextBlock Text="{Binding Detail.VerifyLine}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                    <TextBlock Text="Evidence" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                    <TextBlock Text="{Binding Detail.EvidenceLine}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                    <ItemsControl ItemsSource="{Binding Detail.ExtraPaths}" Margin="0,4,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" FontSize="12" FontFamily="{DynamicResource MonoFont}" TextWrapping="Wrap" Margin="0,0,0,2"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

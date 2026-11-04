@@ -1,0 +1,277 @@
+<UserControl x:Class="Sentinel.App.Views.CrashesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,16,24,24">
+            <Grid Margin="0,0,0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Crashes &amp; hangs" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock Margin="0,2,0,0">
+                        <Run Text="{Binding MachineName, Mode=OneWay}"/>
+                        <Run Text=" · "/>
+                        <Run Text="{Binding Summary, Mode=OneWay}"/>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Coverage}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/>
+                    <!-- U21: deep-link scope from Overview. -->
+                    <TextBlock Text="{Binding DeepLinkNote}" Foreground="{DynamicResource AccentBrush}"
+                               FontSize="12" FontStyle="Italic"
+                               AutomationProperties.Name="Deep link scope">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasDeepLinkNote}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                    <ComboBox ItemsSource="{Binding RangeOptions}" SelectedItem="{Binding SelectedRange, Mode=TwoWay}"
+                              Width="130" Margin="0,0,8,0" AutomationProperties.Name="Date range"/>
+                    <Button Content="Refresh" Click="Refresh_Click" AutomationProperties.Name="Refresh crashes">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsRefreshing}" Value="True">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                        <Setter Property="Content" Value="Collecting…"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- A09: refresh fault line (collapsed while fresh). -->
+            <TextBlock Style="{StaticResource RefreshErrorLine}" Text="{Binding RefreshState.Error}"/>
+            <TextBlock Style="{StaticResource RefreshLoadingLine}" Text="{Binding RefreshState.LoadingText}"/>
+
+            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,8,0,8">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <Ellipse Width="8" Height="8" Fill="{DynamicResource DangerBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Margin="4,0,16,0" VerticalAlignment="Center">
+                            <Run Text="Crash "/><Run Text="{Binding CrashCount, Mode=OneWay}"/>
+                        </TextBlock>
+                        <Ellipse Width="8" Height="8" Fill="{DynamicResource WarningBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Margin="4,0,16,0" VerticalAlignment="Center">
+                            <Run Text="Hang "/><Run Text="{Binding HangCount, Mode=OneWay}"/>
+                        </TextBlock>
+                        <Ellipse Width="8" Height="8" Fill="{DynamicResource InfoBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Margin="4,0,16,0" VerticalAlignment="Center">
+                            <Run Text="Disk warning "/><Run Text="{Binding DiskCount, Mode=OneWay}"/>
+                        </TextBlock>
+                        <Ellipse Width="8" Height="8" Fill="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Margin="4,0,16,0" VerticalAlignment="Center">
+                            <Run Text="Update "/><Run Text="{Binding UpdateCount, Mode=OneWay}"/>
+                        </TextBlock>
+                        <Ellipse Width="8" Height="8" Fill="{DynamicResource WarningSoftBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Margin="4,0,0,0" VerticalAlignment="Center">
+                            <Run Text="Hardware error "/><Run Text="{Binding HardwareCount, Mode=OneWay}"/>
+                        </TextBlock>
+                    </StackPanel>
+                    <Canvas x:Name="TimelineStrip" Height="36" Background="Transparent"
+                            AutomationProperties.Name="Event timeline"/>
+                    <TextBlock Text="Each dot is one event in the selected range, oldest left." FontSize="11"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="{Binding ReliabilityLine}" TextWrapping="Wrap"
+                               AutomationProperties.Name="Reliability history"/>
+                    <TextBlock Text="{Binding MinidumpLine}" TextWrapping="Wrap" Margin="0,4,0,0"
+                               AutomationProperties.Name="Crash dump history"/>
+                    <ItemsControl ItemsSource="{Binding Dumps}" Margin="0,4,0,0"
+                                  AutomationProperties.Name="Crash dumps">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,1,0,1"
+                                           Foreground="{DynamicResource TextSecondaryBrush}">
+                                    <Run Text="{Binding Name, Mode=OneWay}" FontFamily="Consolas, monospace"/>
+                                    <Run Text=" — "/>
+                                    <Run Text="{Binding Status, Mode=OneWay}"/>
+                                    <Run Text=" "/>
+                                    <Run Text="{Binding BugCheckName, Mode=OneWay}"/>
+                                    <Run Text=" "/>
+                                    <Run Text="{Binding Module, Mode=OneWay}"/>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="320"/>
+                    <ColumnDefinition Width="360" MinWidth="300"/>
+                </Grid.ColumnDefinitions>
+                <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,8,8">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <ComboBox ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding SelectedEventType, Mode=TwoWay}"
+                                      Width="150" Margin="0,0,8,0" AutomationProperties.Name="Event type filter"/>
+                            <TextBlock Text="{Binding RelatedCaption}" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource AccentBrush}" FontSize="12"/>
+                            <Button Content="Clear" Command="{Binding ClearRelatedCommand}" Margin="8,0,0,0"
+                                    Visibility="{Binding HasRelatedFilter, Converter={StaticResource BoolToVisibility}}"
+                                    AutomationProperties.Name="Clear event filter"/>
+                        </StackPanel>
+                        <DataGrid x:Name="EventsGrid" ItemsSource="{Binding VisibleRows}" SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                                  Height="330" AutomationProperties.Name="Crash events" IsReadOnly="True"
+                                  AutoGenerateColumns="False" SelectionMode="Single">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Date &amp; time" Binding="{Binding When}" Width="140"/>
+                                <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="100"/>
+                                <DataGridTextColumn Header="Summary" Binding="{Binding Summary}" Width="*"/>
+                                <DataGridTextColumn Header="Event ID" Binding="{Binding EventId}" Width="80"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,8">
+                    <Grid>
+                        <TextBlock Text="Select a row to see the evidence."
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Visibility="{Binding HasSelection, Converter={StaticResource InverseBoolToVisibility}}"/>
+                        <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto"
+                                      Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding SelectedCard.Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <Border Grid.Column="1" Background="{DynamicResource AccentSoftBrush}" CornerRadius="4"
+                                            Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Top">
+                                        <TextBlock Text="{Binding OverallConfidence}" FontSize="11"
+                                                   Foreground="{DynamicResource AccentInkBrush}"/>
+                                    </Border>
+                                </Grid>
+                                <TextBlock Margin="0,2,0,8" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12">
+                                    <Run Text="{Binding SelectedRow.Type, Mode=OneWay}"/>
+                                    <Run Text=" · Event "/>
+                                    <Run Text="{Binding SelectedRow.EventId, Mode=OneWay}"/>
+                                    <Run Text=" · "/>
+                                    <Run Text="{Binding SelectedRow.When, Mode=OneWay}"/>
+                                </TextBlock>
+                                <TextBlock Text="Observed evidence" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Text="Source" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedAnchor.Provider}" FontSize="12" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Row="1" Text="Log" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedAnchor.Log}" FontSize="12"/>
+                                    <TextBlock Grid.Row="2" Text="Record" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedAnchor.RecordId}" FontSize="12"/>
+                                    <TextBlock Grid.Row="3" Text="Level" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedAnchor.Level}" FontSize="12"/>
+                                    <TextBlock Grid.Row="4" Text="Device" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedDevice}" FontSize="12" TextWrapping="Wrap"/>
+                                </Grid>
+                                <TextBlock Text="Possible explanations" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <ItemsControl ItemsSource="{Binding SelectedCard.Findings}" Margin="0,0,0,8">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="0,0,0,6">
+                                                <TextBlock Text="{Binding Cause}" TextWrapping="Wrap"/>
+                                                <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}">
+                                                    <Run Text="Confidence: "/><Run Text="{Binding Confidence, Mode=OneWay}"/>
+                                                </TextBlock>
+                                                <ItemsControl ItemsSource="{Binding Citations}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding Label}" FontSize="11"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Text="What to check next" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <ItemsControl ItemsSource="{Binding SelectedCard.Prevention}" Margin="0,0,0,4">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Converter={StaticResource BulletPrefix}}" TextWrapping="Wrap" Margin="0,0,0,2"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <WrapPanel Margin="0,0,0,4">
+                                    <Button Content="Show this event only" Command="{Binding ShowRelatedCommand}"
+                                            Margin="0,0,6,6" AutomationProperties.Name="Show this event only"/>
+                                    <Button Content="Review disk events" Command="{Binding ReviewDiskEventsCommand}"
+                                            Margin="0,0,6,6" AutomationProperties.Name="Review disk events"/>
+                                    <Button Content="Compare device state" Command="{Binding OpenDriversCommand}"
+                                            Margin="0,0,6,6" AutomationProperties.Name="Compare device state"/>
+                                    <Button Content="Open Event Viewer" Command="{Binding OpenEventViewerCommand}"
+                                            Margin="0,0,6,6" AutomationProperties.Name="Open Event Viewer"/>
+                                    <Button Content="Open storage view" Command="{Binding OpenStorageCommand}"
+                                            Margin="0,0,6,6" AutomationProperties.Name="Open storage view"/>
+                                </WrapPanel>
+                                <Expander Header="Raw event details" Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedAnchor.Message}" TextWrapping="Wrap" FontSize="12"/>
+                                        <ItemsControl ItemsSource="{Binding SelectedAnchor.Properties}" Margin="0,4,0,0">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding}" FontSize="11"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Expander>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Ask about this event" Command="{Binding AskAboutThisCommand}"
+                                            Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"
+                                            AutomationProperties.Name="Ask about this event"/>
+                                    <Button Content="Copy details" Command="{Binding CopyDetailsCommand}"
+                                            AutomationProperties.Name="Copy crash details"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="Events per week" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <Canvas x:Name="WeeksCanvas" Height="120" Background="Transparent"
+                            AutomationProperties.Name="Weekly event counts"/>
+                    <TextBlock Text="Stacked event counts by week (last 30 days)." FontSize="11"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

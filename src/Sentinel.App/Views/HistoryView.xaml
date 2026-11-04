@@ -1,0 +1,408 @@
+<UserControl x:Class="Sentinel.App.Views.HistoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <Style x:Key="RowButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,16,24,24">
+            <Grid Margin="0,0,0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="History" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock Text="View past scans, investigations and actions on this PC."
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                    <Button Content="Export JSON" Click="ExportJson_Click" Margin="0,0,8,0"
+                            AutomationProperties.Name="Export history JSON"/>
+                    <Button Content="Export HTML" Click="ExportHtml_Click"
+                            AutomationProperties.Name="Export history HTML"/>
+                </StackPanel>
+            </Grid>
+            <!-- A09: refresh fault line (collapsed while fresh). -->
+            <TextBlock Style="{StaticResource RefreshErrorLine}" Text="{Binding RefreshState.Error}"/>
+            <TextBlock Style="{StaticResource RefreshLoadingLine}" Text="{Binding RefreshState.LoadingText}"/>
+            <TextBlock Text="{Binding ExportNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+
+            <TabControl SelectedIndex="{Binding TabIndex, Mode=TwoWay}" Margin="0,4,0,0">
+                <TabItem Header="Activity" AutomationProperties.Name="Activity tab">
+                    <StackPanel Margin="0,8,0,0">
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal">
+                                <ComboBox ItemsSource="{Binding KindOptions}" SelectedItem="{Binding SelectedKind, Mode=TwoWay}"
+                                          Width="120" Margin="0,0,8,0" AutomationProperties.Name="Event kind filter"/>
+                                <Button Content="Scans" Click="KindChip_Click" Tag="Scans" Margin="0,0,8,0"
+                                        AutomationProperties.Name="Show scans"/>
+                                <Button Content="Findings" Click="KindChip_Click" Tag="Findings" Margin="0,0,8,0"
+                                        AutomationProperties.Name="Show investigations with findings"/>
+                                <Button Content="Actions" Click="KindChip_Click" Tag="Actions"
+                                        AutomationProperties.Name="Show actions"/>
+                            </StackPanel>
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding RangeOptions}"
+                                      SelectedItem="{Binding SelectedRange, Mode=TwoWay}" Width="130"
+                                      AutomationProperties.Name="Date range"/>
+                        </Grid>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" MinWidth="320"/>
+                                <ColumnDefinition Width="370" MinWidth="300"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,8,8"
+                                    MinHeight="200">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding EmptyText}" Foreground="{DynamicResource TextSecondaryBrush}"
+                                               Margin="0,8,0,8">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Groups.Count}" Value="0">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <ItemsControl ItemsSource="{Binding Groups}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Margin="0,4,0,8">
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                        <TextBlock Text="{Binding Label}" FontWeight="SemiBold" Margin="0,0,8,0"/>
+                                                        <TextBlock Text="{Binding CountText}" FontSize="11"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                   VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding Events}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Button Style="{StaticResource RowButton}" Click="Event_Click"
+                                                                        AutomationProperties.Name="{Binding Title}">
+                                                                    <Border CornerRadius="6" Padding="8,6" Margin="0,0,0,4"
+                                                                            BorderThickness="1">
+                                                                        <Border.Style>
+                                                                            <Style TargetType="Border">
+                                                                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                                                                <Setter Property="Background" Value="Transparent"/>
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Value="True">
+                                                                                        <DataTrigger.Binding>
+                                                                                            <MultiBinding Converter="{StaticResource Equality}">
+                                                                                                <Binding/>
+                                                                                                <Binding Path="DataContext.SelectedEvent"
+                                                                                                         RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                                                                            </MultiBinding>
+                                                                                        </DataTrigger.Binding>
+                                                                                        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                                                        <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </Border.Style>
+                                                                        <Grid>
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="86"/>
+                                                                                <ColumnDefinition Width="24"/>
+                                                                                <ColumnDefinition Width="*"/>
+                                                                                <ColumnDefinition Width="16"/>
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <StackPanel>
+                                                                                <TextBlock Text="{Binding TimeLine1}" FontSize="12"/>
+                                                                                <TextBlock Text="{Binding TimeLine2}" FontSize="11"
+                                                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                                            </StackPanel>
+                                                                            <Grid Grid.Column="1" Width="18" Height="18" Margin="0,2,0,0"
+                                                                                  VerticalAlignment="Top">
+                                                                                <Ellipse>
+                                                                                    <Ellipse.Style>
+                                                                                        <Style TargetType="Ellipse">
+                                                                                            <Setter Property="Fill" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                                                            <Style.Triggers>
+                                                                                                <DataTrigger Binding="{Binding StatusKind}" Value="Good">
+                                                                                                    <Setter Property="Fill" Value="{DynamicResource AccentBrush}"/>
+                                                                                                </DataTrigger>
+                                                                                                <DataTrigger Binding="{Binding StatusKind}" Value="Bad">
+                                                                                                    <Setter Property="Fill" Value="{DynamicResource DangerBrush}"/>
+                                                                                                </DataTrigger>
+                                                                                            </Style.Triggers>
+                                                                                        </Style>
+                                                                                    </Ellipse.Style>
+                                                                                </Ellipse>
+                                                                                <TextBlock Foreground="White" FontSize="10"
+                                                                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                                    <TextBlock.Style>
+                                                                                        <Style TargetType="TextBlock">
+                                                                                            <Setter Property="Text" Value="•"/>
+                                                                                            <Style.Triggers>
+                                                                                                <DataTrigger Binding="{Binding StatusKind}" Value="Good">
+                                                                                                    <Setter Property="Text" Value="✓"/>
+                                                                                                </DataTrigger>
+                                                                                                <DataTrigger Binding="{Binding StatusKind}" Value="Bad">
+                                                                                                    <Setter Property="Text" Value="✕"/>
+                                                                                                </DataTrigger>
+                                                                                            </Style.Triggers>
+                                                                                        </Style>
+                                                                                    </TextBlock.Style>
+                                                                                </TextBlock>
+                                                                            </Grid>
+                                                                            <StackPanel Grid.Column="2" Margin="8,0,0,0">
+                                                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
+                                                                                <TextBlock Text="{Binding Source}" FontSize="11"
+                                                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                                                <TextBlock Text="{Binding Detail}" FontSize="12" TextWrapping="Wrap"/>
+                                                                            </StackPanel>
+                                                                            <TextBlock Grid.Column="3" Text="›" FontSize="16"
+                                                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                                       VerticalAlignment="Center"/>
+                                                                        </Grid>
+                                                                    </Border>
+                                                                </Button>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                                    Padding="12,8" Margin="0,0,0,8" VerticalAlignment="Top">
+                                <Grid>
+                                    <TextBlock Text="Select an event to see the record."
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               Visibility="{Binding HasSelection, Converter={StaticResource InverseBoolToVisibility}}"/>
+                                    <ScrollViewer MaxHeight="480" VerticalScrollBarVisibility="Auto"
+                                                  Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding DrawerTitle}" FontSize="15" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding DrawerSubtitle}" FontSize="12" Margin="0,0,0,8"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <ItemsControl ItemsSource="{Binding DrawerFields}" Margin="0,0,0,8">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,0,0,4">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="130"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding Label}" FontSize="12"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="12"
+                                                                       TextWrapping="Wrap"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                            <Expander Header="Findings" IsExpanded="{Binding IsFindingsExpanded, Mode=TwoWay}"
+                                                      Margin="0,0,0,8"
+                                                      Visibility="{Binding ShowFindings, Converter={StaticResource BoolToVisibility}}">
+                                                <ItemsControl ItemsSource="{Binding DrawerFindings}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Margin="0,0,0,8">
+                                                                <TextBlock Text="{Binding Observation}" TextWrapping="Wrap" FontWeight="SemiBold" FontSize="12"/>
+                                                                <TextBlock Text="{Binding Interpretation}" TextWrapping="Wrap" FontSize="12"/>
+                                                                <TextBlock Text="{Binding Limitations}" TextWrapping="Wrap" FontSize="11"
+                                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                                <TextBlock Text="{Binding Citations}" TextWrapping="Wrap" FontSize="11"
+                                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Expander>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Button Command="{Binding ViewFindingsCommand}" Margin="0,0,4,0"
+                                                        AutomationProperties.Name="View findings">
+                                                    <StackPanel>
+                                                        <TextBlock Text="View findings" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="See detected items" FontSize="11"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Grid.Column="1" Command="{Binding ViewCoverageCommand}" Margin="4,0,0,0"
+                                                        AutomationProperties.Name="View coverage">
+                                                    <StackPanel>
+                                                        <TextBlock Text="View coverage" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="See scanned locations" FontSize="11"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </Grid>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="ⓘ" Margin="0,0,6,0"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                <TextBlock Text="{Binding AuditIntegrityLine}" FontSize="12"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,8,0"
+                                Visibility="{Binding IsActivityTab, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <TextBlock Text="Undo Vault" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6"
+                                        Padding="12,8">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="↩" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding VaultTitle}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding VaultState}" FontSize="12" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="Scan runs" AutomationProperties.Name="Scan runs tab">
+                    <StackPanel Margin="0,8,0,0">
+                        <TextBlock Text="Every recorded scan. Select a row to inspect it in the activity timeline."
+                                   FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                        <DataGrid ItemsSource="{Binding Runs}" Height="400" IsReadOnly="True"
+                                  AutoGenerateColumns="False" SelectionMode="Single"
+                                  SelectionChanged="RunsGrid_SelectionChanged"
+                                  AutomationProperties.Name="Scan runs">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Started" Binding="{Binding Started}" Width="150"/>
+                                <DataGridTextColumn Header="Root" Binding="{Binding Root}" Width="*"/>
+                                <DataGridTextColumn Header="Mode" Binding="{Binding Mode}" Width="90"/>
+                                <DataGridTextColumn Header="Files" Binding="{Binding Files}" Width="90"/>
+                                <DataGridTextColumn Header="Gaps" Binding="{Binding Gaps}" Width="70"/>
+                                <DataGridTextColumn Header="Elapsed" Binding="{Binding Elapsed}" Width="80"/>
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="Investigations" AutomationProperties.Name="Investigations tab">
+                    <StackPanel Margin="0,8,0,0">
+                        <TextBlock Text="Every recorded AI investigation. Select a row to inspect it in the activity timeline."
+                                   FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                        <DataGrid ItemsSource="{Binding Investigations}" Height="400" IsReadOnly="True"
+                                  AutoGenerateColumns="False" SelectionMode="Single"
+                                  SelectionChanged="InvestigationsGrid_SelectionChanged"
+                                  AutomationProperties.Name="Investigations">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Updated" Binding="{Binding Updated}" Width="150"/>
+                                <DataGridTextColumn Header="Goal" Binding="{Binding Goal}" Width="*"/>
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="140"/>
+                                <DataGridTextColumn Header="Findings" Binding="{Binding Findings}" Width="80"/>
+                                <DataGridTextColumn Header="Tool calls" Binding="{Binding ToolCalls}" Width="90"/>
+                                <DataGridTextColumn Header="Elapsed" Binding="{Binding Elapsed}" Width="80"/>
+                                <DataGridTextColumn Header="Cost" Binding="{Binding Cost}" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="Undo Vault" AutomationProperties.Name="Undo Vault tab">
+                    <StackPanel Margin="0,8,0,0">
+                        <!-- E37: recovery banner (interrupted-operation residue). -->
+                        <Border BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1" CornerRadius="6"
+                                Padding="12,8" Margin="0,0,0,8"
+                                Visibility="{Binding HasRecovery, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="{Binding RecoveryNote}" TextWrapping="Wrap"/>
+                        </Border>
+                        <TextBlock Text="{Binding ActionErrorLine}" Margin="0,0,0,8" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource DangerBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ActionErrorLine}" Value="">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Text="{Binding VaultState}" FontSize="12" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                        <TextBlock Text="{Binding VaultNote}" Margin="0,0,0,6" TextWrapping="Wrap">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding VaultNote}" Value="">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <ListBox ItemsSource="{Binding VaultRows}" MaxHeight="420"
+                                 AutomationProperties.Name="Vault items">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                            CornerRadius="6" Padding="10,8" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding Size, StringFormat=' · {0}'}"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                    <TextBlock Text="{Binding MovedLine, StringFormat=' · {0}'}"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding OriginalPath}" FontSize="11"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Status}" FontSize="11"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                <TextBlock Text="{Binding ReviewLine}" FontSize="11" TextWrapping="Wrap"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                <TextBlock Text="{Binding ConflictNote}" FontSize="11" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="1" Content="Restore"
+                                                    Command="{Binding RestoreCommand}" Padding="10,2"
+                                                    VerticalAlignment="Center" Margin="8,0,0,0"
+                                                    Visibility="{Binding CanRestore, Converter={StaticResource BoolToVisibility}}"
+                                                    AutomationProperties.Name="{Binding Name, StringFormat='Restore {0}'}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </TabItem>
+            </TabControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

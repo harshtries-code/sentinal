@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sentinel.Engine", "Sentinel.Engine\Sentinel.Engine.csproj", "{5FE42A14-E9E3-4482-ABF8-1631083679A8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sentinel.Store", "Sentinel.Store\Sentinel.Store.csproj", "{CABCC2FB-FA59-4805-9759-F3827D22D52D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sentinel.App", "Sentinel.App\Sentinel.App.csproj", "{FB32014D-1FEA-4500-B726-6CFAF0F1EC2C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sentinel.Tests", "..\tests\Sentinel.Tests\Sentinel.Tests.csproj", "{4091462E-E115-4709-9999-62C4AB401588}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5FE42A14-E9E3-4482-ABF8-1631083679A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FE42A14-E9E3-4482-ABF8-1631083679A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FE42A14-E9E3-4482-ABF8-1631083679A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FE42A14-E9E3-4482-ABF8-1631083679A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CABCC2FB-FA59-4805-9759-F3827D22D52D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CABCC2FB-FA59-4805-9759-F3827D22D52D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CABCC2FB-FA59-4805-9759-F3827D22D52D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CABCC2FB-FA59-4805-9759-F3827D22D52D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB32014D-1FEA-4500-B726-6CFAF0F1EC2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB32014D-1FEA-4500-B726-6CFAF0F1EC2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB32014D-1FEA-4500-B726-6CFAF0F1EC2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB32014D-1FEA-4500-B726-6CFAF0F1EC2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4091462E-E115-4709-9999-62C4AB401588}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4091462E-E115-4709-9999-62C4AB401588}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4091462E-E115-4709-9999-62C4AB401588}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4091462E-E115-4709-9999-62C4AB401588}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

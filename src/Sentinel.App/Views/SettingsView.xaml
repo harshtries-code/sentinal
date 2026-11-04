@@ -1,0 +1,97 @@
+<UserControl x:Class="Sentinel.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel>
+        <TextBlock Text="Settings — every control below works" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+        <TextBlock Text="A · Scans" FontWeight="SemiBold" Margin="0,0,0,4"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+            <TextBlock Text="Default mode:" Width="180" VerticalAlignment="Center"/>
+            <ComboBox ItemsSource="{Binding ScanModes}" SelectedItem="{Binding DefaultScanMode}" Width="140" AutomationProperties.Name="Default scan mode setting"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="Balanced CPU cap:" Width="180" VerticalAlignment="Center"/>
+            <Slider Value="{Binding BalancedCapPercent}" Minimum="10" Maximum="30" Width="160" VerticalAlignment="Center" TickFrequency="5" IsSnapToTickEnabled="True"/>
+            <TextBlock Text="{Binding BalancedCapPercent}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+            <TextBlock Text="%" VerticalAlignment="Center"/>
+        </StackPanel>
+        <CheckBox Content="Pause scans when the battery is low (under 20%)" IsChecked="{Binding PauseOnLowBattery}" Margin="0,0,0,4" AutomationProperties.Name="Pause scans on low battery setting"/>
+        <CheckBox Content="Priority watch: check new processes and executables while the app is open" IsChecked="{Binding PriorityWatchEnabled}" Margin="0,0,0,8" AutomationProperties.Name="Priority watch setting"/>
+
+        <TextBlock Text="B · AI &amp; protection" FontWeight="SemiBold" Margin="0,0,0,4"/>
+        <CheckBox Content="AI layer enabled (investigations + panel)" IsChecked="{Binding AiEnabled}" Margin="0,0,0,4"/>
+        <TextBlock Text="{Binding CloudKeyLine}" FontWeight="SemiBold" Margin="0,0,0,2"/>
+        <TextBlock Text="{Binding CloudKeyFormatHint}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+            <PasswordBox x:Name="KeyBox" Width="280" VerticalAlignment="Center"/>
+            <Button Content="Save key" Click="SaveKey_Click" Margin="6,0,0,0" Padding="10,4"/>
+            <Button Content="Remove" Click="RemoveKey_Click" Margin="6,0,0,0" Padding="10,4"/>
+        </StackPanel>
+        <TextBlock Text="{Binding KeyError}" FontSize="12" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+        <TextBlock Text="Never Touch folders (Cleaner never lists these):" Margin="0,0,0,4"/>
+        <ItemsControl ItemsSource="{Binding NeverTouch}" Margin="0,0,0,4">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <DockPanel Margin="0,0,0,2">
+                        <Button DockPanel.Dock="Right" Content="Remove" Padding="8,0"
+                                Command="{Binding DataContext.RemoveNeverCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"/>
+                        <TextBlock Text="{Binding}" FontFamily="{StaticResource MonoFont}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                    </DockPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+            <TextBox Text="{Binding NewNeverPath, UpdateSourceTrigger=PropertyChanged}" Width="300" Margin="0,0,6,0"/>
+            <Button Content="Add folder" Command="{Binding AddNeverCommand}" Padding="10,2"/>
+        </StackPanel>
+        <TextBlock Text="{Binding NeverError}" Foreground="{DynamicResource DangerBrush}" FontSize="12" Margin="0,0,0,8"/>
+
+        <TextBlock Text="C · Privacy" FontWeight="SemiBold" Margin="0,0,0,4"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+            <Button Content="Show AI payload inspector" Command="{Binding ShowPayloadsCommand}" Padding="10,4" Margin="0,0,6,0"/>
+            <Button Content="Clear scan cache" Command="{Binding DeleteDataCommand}" Padding="10,4"/>
+        </StackPanel>
+        <TextBlock Text="{Binding PayloadCapacityLine}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+        <ListBox ItemsSource="{Binding PayloadRows}" SelectedItem="{Binding SelectedPayloadRow, Mode=TwoWay}"
+                 DisplayMemberPath="Summary" FontFamily="{StaticResource MonoFont}" FontSize="11"
+                 MaxHeight="110" Margin="0,0,0,2" AutomationProperties.Name="Captured AI requests"/>
+        <TextBlock Text="{Binding PayloadDetail}" FontFamily="{StaticResource MonoFont}" FontSize="11" TextWrapping="Wrap" MaxHeight="160" Margin="0,0,0,2"/>
+        <TextBlock Text="{Binding CrashDataPolicy}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+        <TextBlock Text="{Binding TelemetryPolicy}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+        <TextBlock Text="{Binding ActionNote}" FontSize="12" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
+
+        <TextBlock Text="D · Safety rails (locked)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+        <TextBlock Text="{Binding RestorePolicy}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+        <TextBlock Text="{Binding DeletionPolicy}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+
+        <TextBlock Text="E · Appearance" FontWeight="SemiBold" Margin="0,0,0,4"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+            <TextBlock Text="Theme:" Width="180" VerticalAlignment="Center"/>
+            <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" Width="140" AutomationProperties.Name="Theme"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="Font size:" Width="180" VerticalAlignment="Center"/>
+            <Slider Value="{Binding FontPercent}" Minimum="90" Maximum="125" Width="160" VerticalAlignment="Center" TickFrequency="5" IsSnapToTickEnabled="True"/>
+            <TextBlock Text="{Binding FontPercent}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+            <TextBlock Text="%" VerticalAlignment="Center"/>
+        </StackPanel>
+        <CheckBox Content="Reduce motion" IsChecked="{Binding ReduceMotion}" Margin="0,0,0,4"
+                  AutomationProperties.Name="Reduce motion setting"
+                  ToolTip="Suppresses transitions. Sentinel currently has no animated transitions; this setting holds for any added later."/>
+        <CheckBox Content="High contrast" IsChecked="{Binding HighContrast}" Margin="0,0,0,8"
+                  AutomationProperties.Name="High contrast setting"
+                  ToolTip="Switches to the dedicated high-contrast resource set."/>
+
+        <TextBlock Text="F · About &amp; data" FontWeight="SemiBold" Margin="0,0,0,4"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+            <Button Content="Export audit JSON" Click="ExportJson_Click" Margin="0,0,6,0" Padding="10,4"/>
+            <Button Content="Export audit HTML" Click="ExportHtml_Click" Margin="0,0,6,0" Padding="10,4"/>
+            <Button Content="Open data folder" Command="{Binding OpenDataFolderCommand}" Padding="10,4"/>
+        </StackPanel>
+        <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}">
+            <Run Text="App"/> <Run Text="{Binding AppVersion, Mode=OneWay}"/> <Run Text="· model:"/> <Run Text="{Binding ModelInfo, Mode=OneWay}"/> <Run Text="· pack v"/><Run Text="{Binding PackVersion, Mode=OneWay}"/>
+        </TextBlock>
+        <TextBlock Text="{Binding DataInfo}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+    </StackPanel>
+</UserControl>

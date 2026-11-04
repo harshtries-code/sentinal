@@ -1,0 +1,358 @@
+<Window x:Class="Sentinel.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Sentinel.App"
+        xmlns:views="clr-namespace:Sentinel.App.Views"
+        mc:Ignorable="d"
+        Title="Sentinel" Height="640" Width="1024" MinHeight="640" MinWidth="1024"
+        WindowStyle="None" Background="{DynamicResource BackgroundBrush}"
+        SizeChanged="Window_SizeChanged">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="40" ResizeBorderThickness="5"
+                      GlassFrameThickness="0" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+    <Window.InputBindings>
+        <KeyBinding Gesture="Ctrl+J" Command="{Binding Ask.ToggleCommand}"/>
+        <KeyBinding Gesture="Escape" Command="{Binding Ask.CloseCommand}"/>
+    </Window.InputBindings>
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Custom title bar (02 §2, handoff §3): native snap/min/max/close
+             kept; the ASK button sits left of the caption buttons (02 §14). -->
+        <DockPanel Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
+                   MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <TextBlock DockPanel.Dock="Left" Text="Sentinel" FontWeight="SemiBold"
+                       VerticalAlignment="Center" Margin="12,0,0,0"/>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <!-- U27: bot glyph (Segoe MDL2 ChatBot) instead of a
+                     chat icon — sits left of the caption buttons as
+                     decided. The automation name stays "Ask Sentinel"
+                     so screen readers and UI tests address it by the
+                     same name. -->
+                <Button FontFamily="Segoe MDL2 Assets" Content="&#xE99A;" Click="Ask_Click" Width="44"
+                        FontSize="16" Foreground="{DynamicResource AccentBrush}"
+                        Style="{StaticResource TitleBarButton}"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        AutomationProperties.Name="Ask Sentinel"
+                        ToolTip="Ask Sentinel (Ctrl+J)"/>
+                <Button Content="_" Click="Min_Click" Width="44"
+                        Style="{StaticResource TitleBarButton}"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        AutomationProperties.Name="Minimize"/>
+                <Button Content="▢" Click="Max_Click" Width="44"
+                        Style="{StaticResource TitleBarButton}"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        AutomationProperties.Name="Maximize or restore"/>
+                <Button Content="✕" Click="Close_Click" Width="44"
+                        Style="{StaticResource TitleBarButton}"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        AutomationProperties.Name="Close"/>
+            </StackPanel>
+        </DockPanel>
+
+        <Grid Grid.Row="1">
+    <DockPanel>
+        <!-- Status bar: always visible (02 §2, handoff §3: 28 DIP). -->
+        <StatusBar DockPanel.Dock="Bottom" Height="28">
+            <StatusBarItem ToolTip="Sentinel's own CPU and working set right now">
+                <TextBlock Text="{Binding Status.SelfResources}" FontFamily="{DynamicResource MonoFont}"/>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem ToolTip="Microsoft Defender protection state">
+                <TextBlock Text="{Binding Status.DefenderState}"/>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem ToolTip="Most recent scan on this PC">
+                <TextBlock Text="{Binding Status.LastScan}"/>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem ToolTip="Priority watch: new processes and executables while open">
+                <TextBlock Text="{Binding Status.WatchLine}"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <!-- Scan header (02 §5.4, handoff refinement #4): one Scan
+             action + mode selector + star-sized scope. Pause / Resume /
+             Cancel exist only during a run. All buttons are real. -->
+        <Border DockPanel.Dock="Top" Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="8">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Content="Scan this PC" Click="Scan_Click"
+                            IsEnabled="{Binding Session.CanStart}"
+                            Style="{StaticResource PrimaryButton}"
+                            AutomationProperties.Name="Scan this PC"/>
+                    <Button Grid.Column="1" Content="Turbo" Click="Turbo_Click"
+                            IsEnabled="{Binding Session.CanStart}"
+                            ToolTip="Manual full-speed scan (≤60%)"/>
+                    <ComboBox Grid.Column="2" ItemsSource="{Binding Settings.ScanModes}"
+                              SelectedItem="{Binding Settings.DefaultScanMode, Mode=TwoWay}"
+                              Width="110" Margin="4,0" ToolTip="Default scan mode"
+                              AutomationProperties.Name="Default scan mode"/>
+                    <TextBox Grid.Column="3" x:Name="RootBox" MinWidth="120" Margin="4,0"
+                             Text="{Binding ScanRoot, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Folder to scan"
+                             AutomationProperties.Name="Folder to scan"/>
+                    <Button Grid.Column="4" Content="Browse…" Click="Browse_Click"/>
+                    <Button Grid.Column="5" Content="Pause" Click="Pause_Click"
+                            IsEnabled="{Binding Session.CanPause}"
+                            Visibility="{Binding Session.CanPause, Converter={StaticResource BoolToVisibility}}"/>
+                    <Button Grid.Column="6" Content="Resume" Click="Resume_Click"
+                            IsEnabled="{Binding Session.CanResume}"
+                            Visibility="{Binding Session.CanResume, Converter={StaticResource BoolToVisibility}}"/>
+                    <Button Grid.Column="7" Content="Cancel" Click="Cancel_Click"
+                            IsEnabled="{Binding Session.CanCancel}"
+                            Visibility="{Binding Session.CanCancel, Converter={StaticResource BoolToVisibility}}"/>
+                </Grid>
+                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                    <TextBlock Text="{Binding PcName}" Foreground="{DynamicResource TextSecondaryBrush}"
+                               Margin="0,0,12,0" ToolTip="This PC"/>
+                    <TextBlock Text="{Binding Session.ModeLabel}" Foreground="{DynamicResource AccentBrush}"
+                               FontWeight="SemiBold" Margin="0,0,12,0"/>
+                    <TextBlock Text="{Binding Session.StatusLine}" Margin="0,0,12,0"/>
+                    <TextBlock Text="{Binding Session.Counts}" FontFamily="{DynamicResource MonoFont}"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,12,0"/>
+                    <TextBlock Text="{Binding Session.Elapsed}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                    <TextBlock Text="{Binding Session.InvestigationLine}"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding Session.ProvisionalFindings}"
+                              Margin="0,2,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" FontSize="12" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- Left nav (02 §2, handoff §3): 208 expanded, 64 collapsed
+             below 1100px. Badges + tooltips + automation names carry
+             meaning when labels hide. Settings anchored at bottom. -->
+        <DockPanel DockPanel.Dock="Left" x:Name="NavPanel" Width="208"
+                   Background="{DynamicResource SurfaceBrush}">
+            <Button DockPanel.Dock="Bottom" x:Name="SettingsNavButton" Click="Settings_Click"
+                    HorizontalContentAlignment="Stretch" Margin="4"
+                    ToolTip="Settings" AutomationProperties.Name="Settings">
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}">
+                        <TextBlock Text="⚙" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   FontWeight="SemiBold" Foreground="{DynamicResource AccentInkBrush}"/>
+                    </Border>
+                    <TextBlock Text="Settings" VerticalAlignment="Center" Margin="10,0,0,0"
+                               Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVisibility}}"/>
+                </StackPanel>
+            </Button>
+            <ListBox x:Name="NavBox" SelectionChanged="Nav_SelectionChanged" SelectedIndex="0"
+                     BorderThickness="0">
+                <ListBoxItem ToolTip="Overview" AutomationProperties.Name="Overview">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}">
+                            <TextBlock Text="O" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontWeight="SemiBold" Foreground="{DynamicResource AccentInkBrush}"/>
+                        </Border>
+                        <TextBlock Text="Overview" VerticalAlignment="Center" Margin="10,0,0,0"
+                                   Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVisibility}}"/>
+                    </StackPanel>
+                </ListBoxItem>
+                <ListBoxItem ToolTip="Performance" AutomationProperties.Name="Performance">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}">
+                            <TextBlock Text="P" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontWeight="SemiBold" Foreground="{DynamicResource AccentInkBrush}"/>
+                        </Border>
+                        <TextBlock Text="Performance" VerticalAlignment="Center" Margin="10,0,0,0"
+                                   Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVisibility}}"/>
+                    </StackPanel>
+                </ListBoxItem>
+                <ListBoxItem ToolTip="Storage" AutomationProperties.Name="Storage">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}">
+                            <TextBlock Text="S" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontWeight="SemiBold" Foreground="{DynamicResource AccentInkBrush}"/>
+                        </Border>
+                        <TextBlock Text="Storage" VerticalAlignment="Center" Margin="10,0,0,0"
+                                   Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVisibility}}"/>
+                    </StackPanel>
+                </ListBoxItem>
+                <ListBoxItem ToolTip="Drivers" AutomationProperties.Name="Drivers">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}">
+                            <TextBlock Text="D" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontWeight="SemiBold" Foreground="{DynamicResource AccentInkBrush}"/>
+                        </Border>
+                        <TextBlock Text="Drivers" VerticalAlignment="Center" Margin="10,0,0,0"
+                                   Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVisibility}}"/>
+                    </StackPanel>
+                </ListBoxItem>
+                <ListBoxItem ToolTip="Threats" AutomationProperties.Name="Threats">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}">
+                            <TextBlock Text="T" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontWeight="SemiBold" Foreground="{DynamicResource AccentInkBrush}"/>
+                        </Border>
+                        <TextBlock Text="Threats" VerticalAlignment="Center" Margin="10,0,0,0"
+                                   Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVisibility}}"/>
+                    </StackPanel>
+                </ListBoxItem>
+                <ListBoxItem ToolTip="Crashes" AutomationProperties.Name="Crashes">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}">
+                            <TextBlock Text="!" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
+                        </Border>
+                        <TextBlock Text="Crashes" VerticalAlignment="Center" Margin="10,0,0,0"
+                                   Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVisibility}}"/>
+                    </StackPanel>
+                </ListBoxItem>
+                <ListBoxItem ToolTip="History" AutomationProperties.Name="History">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}">
+                            <TextBlock Text="H" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontWeight="SemiBold" Foreground="{DynamicResource AccentInkBrush}"/>
+                        </Border>
+                        <TextBlock Text="History" VerticalAlignment="Center" Margin="10,0,0,0"
+                                   Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVisibility}}"/>
+                    </StackPanel>
+                </ListBoxItem>
+                <ListBoxItem ToolTip="Reports" AutomationProperties.Name="Reports">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}">
+                            <TextBlock Text="R" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontWeight="SemiBold" Foreground="{DynamicResource AccentInkBrush}"/>
+                        </Border>
+                        <TextBlock Text="Reports" VerticalAlignment="Center" Margin="10,0,0,0"
+                                   Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVisibility}}"/>
+                    </StackPanel>
+                </ListBoxItem>
+            </ListBox>
+        </DockPanel>
+
+        <!-- Global states (02 §17): offline / no-admin / corrupt-data. -->
+        <StackPanel DockPanel.Dock="Top" Margin="12,8,12,0">
+            <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="6" Padding="8,4" Margin="0,0,0,4">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsOffline}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="{Binding OfflineBanner}" TextWrapping="Wrap" FontSize="12"/>
+            </Border>
+            <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,4" Margin="0,0,0,4">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsElevated}" Value="False">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="{Binding AdminBanner}" TextWrapping="Wrap" FontSize="12"/>
+            </Border>
+            <Border BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1" CornerRadius="6" Padding="8,4" Margin="0,0,0,4">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding DbError}" Value="{x:Null}"/>
+                                    <Condition Binding="{Binding LastRecoveryNote}" Value="{x:Null}"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DbError}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="{Binding DbError}" TextWrapping="Wrap" FontSize="12" VerticalAlignment="Center"/>
+                        <Button Content="Rebuild local data" Command="{Binding RebuildDataCommand}" Margin="8,0,0,0" Padding="10,2"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding LastRecoveryNote}" TextWrapping="Wrap" FontSize="12">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding LastRecoveryNote}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- Main canvas. -->
+        <ScrollViewer x:Name="CanvasScroll" Padding="24"
+                      HorizontalScrollBarVisibility="Disabled">
+            <ScrollViewer.Style>
+                <Style TargetType="ScrollViewer">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsNavCollapsed}" Value="True">
+                            <Setter Property="Padding" Value="16"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ScrollViewer.Style>
+            <ContentControl x:Name="PageHost"/>
+        </ScrollViewer>
+    </DockPanel>
+
+            <!-- Ask slide-over: overlays the canvas, never reflows it. -->
+            <views:AskPanelView x:Name="AskView" DataContext="{Binding Ask}"
+                                HorizontalAlignment="Right" VerticalAlignment="Stretch"
+                                Panel.ZIndex="10">
+                <views:AskPanelView.Style>
+                    <Style TargetType="UserControl">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsOpen}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </views:AskPanelView.Style>
+            </views:AskPanelView>
+        </Grid>
+    </Grid>
+</Window>

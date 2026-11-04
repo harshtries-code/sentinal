@@ -1,0 +1,16 @@
+## .NET build outputs (never sync, never commit)
+[Bb]in/
+[Oo]bj/
+out/
+TestResults/
+.vs/
+*.user
+*.suo
+## Sentinel: never commit secrets, credentials, fixtures with real data, or local DBs
+*.db
+*.db-journal
+appsettings.*.json
+.env
+.firecrawl/
+spikes/
+bench-tmp/

@@ -1,0 +1,298 @@
+<UserControl x:Class="Sentinel.App.Views.ReportsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,16,24,24">
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Reports" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock Text="A clear handoff for your technician"
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/>
+                </StackPanel>
+                <Button Grid.Column="1" Content="Generate report" Click="Generate_Click"
+                        VerticalAlignment="Top"
+                        AutomationProperties.Name="Generate report">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsGenerating}" Value="True">
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                    <Setter Property="Content" Value="Generating…"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+
+            <!-- A09: refresh fault line (collapsed while fresh). -->
+            <TextBlock Style="{StaticResource RefreshErrorLine}" Text="{Binding RefreshState.LoadingText}"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="250" MinWidth="200"/>
+                    <ColumnDefinition Width="*" MinWidth="340"/>
+                    <ColumnDefinition Width="280" MinWidth="240"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,8,8"
+                        VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock Text="Report library" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="6"
+                                Padding="10,8" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="Current draft" FontSize="11"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding DraftTitle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding DraftState}" FontSize="11"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                        </Border>
+                        <Button Content="Save draft" Command="{Binding SaveDraftCommand}"
+                                Margin="0,0,0,8"
+                                AutomationProperties.Name="Save draft"/>
+                        <TextBlock Text="Saved reports" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                        <TextBlock Text="{Binding ReportHistory}" FontSize="11" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                        <ListBox ItemsSource="{Binding SavedReports}"
+                                 SelectedItem="{Binding SelectedSaved, Mode=TwoWay}"
+                                 MaxHeight="180" Margin="0,0,0,4"
+                                 AutomationProperties.Name="Saved reports">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding FileName}" FontSize="12"/>
+                                        <TextBlock Text="{Binding SavedLocal}" FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <Button Content="Reopen selected" Command="{Binding ReopenCommand}"
+                                Margin="0,0,0,4"
+                                AutomationProperties.Name="Reopen selected report"/>
+                        <TextBlock Text="{Binding LibraryNote}" FontSize="11" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,8,8">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Document preview" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Content="−" Click="ZoomOut_Click" Width="28" Margin="0,0,4,0"
+                                        AutomationProperties.Name="Zoom out"/>
+                                <TextBlock x:Name="ZoomLabel" Text="100%" Width="48" TextAlignment="Center"
+                                           VerticalAlignment="Center" FontSize="12"/>
+                                <Button Content="+" Click="ZoomIn_Click" Width="28" Margin="4,0,8,0"
+                                        AutomationProperties.Name="Zoom in"/>
+                                <Button Content="Copy summary" Command="{Binding CopyPreviewCommand}"
+                                        AutomationProperties.Name="Copy summary"/>
+                            </StackPanel>
+                        </Grid>
+                        <ScrollViewer MaxHeight="560" VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Auto">
+                            <StackPanel x:Name="PreviewDoc" Margin="4">
+                                <TextBlock Text="Press Generate to build the report."
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Visibility="{Binding HasDraft, Converter={StaticResource InverseBoolToVisibility}}"/>
+                                <StackPanel Visibility="{Binding HasDraft, Converter={StaticResource BoolToVisibility}}">
+                                    <TextBlock Text="Sentinel · Technician report" FontSize="16" FontWeight="SemiBold"/>
+                                    <TextBlock Margin="0,0,0,8" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap">
+                                        <Run Text="{Binding Draft.GeneratedLocal, Mode=OneWay}"/>
+                                        <Run Text=" · "/>
+                                        <Run Text="{Binding Draft.Machine, Mode=OneWay}"/>
+                                        <Run Text=" · "/>
+                                        <Run Text="{Binding Draft.OsName, Mode=OneWay}"/>
+                                    </TextBlock>
+                                    <TextBlock Text="Device summary" FontWeight="SemiBold" Margin="0,4,0,2"/>
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="130"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="Scope" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Draft.ScanScope}" FontSize="12" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Row="1" Text="Coverage" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Draft.CoverageLine}" FontSize="12" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Row="2" Text="Storage" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Draft.Storage}" FontSize="12" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Row="3" Text="Devices" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Draft.Drivers}" FontSize="12" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Row="4" Text="Protection" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Draft.Protection}" FontSize="12" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Row="5" Text="Stability" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Draft.StabilityDetail}" FontSize="12" TextWrapping="Wrap"/>
+                                    </Grid>
+                                    <TextBlock Text="Storage" FontWeight="SemiBold" Margin="0,4,0,2"/>
+                                    <ItemsControl ItemsSource="{Binding Draft.DriveLines}" Margin="0,0,0,6">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Converter={StaticResource BulletPrefix}}" FontSize="12"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="Devices and drivers" FontWeight="SemiBold" Margin="0,4,0,2"/>
+                                    <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="No device issues found."/>
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Draft.DriverIssueNames.Count}" Value="0">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <ItemsControl ItemsSource="{Binding Draft.DriverIssueNames}" Margin="0,0,0,6">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Converter={StaticResource BulletPrefix}}" FontSize="12"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="Stability" FontWeight="SemiBold" Margin="0,4,0,2"/>
+                                    <TextBlock Text="{Binding Draft.StabilityDetail}" FontSize="12" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                                    <TextBlock Text="Protection" FontWeight="SemiBold" Margin="0,4,0,2"/>
+                                    <TextBlock Text="{Binding Draft.ProtectionDetail}" FontSize="12" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                                    <TextBlock Text="Recent actions" FontWeight="SemiBold" Margin="0,4,0,2"/>
+                                    <TextBlock Text="{Binding Draft.ActionsCoverage}" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,2"/>
+                                    <ItemsControl ItemsSource="{Binding Draft.ActionLines}" Margin="0,0,0,6">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Converter={StaticResource BulletPrefix}}" FontSize="12" TextWrapping="Wrap"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="Open questions" FontWeight="SemiBold" Margin="0,4,0,2"/>
+                                    <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="None found in this inspection."/>
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Draft.OpenIssues.Count}" Value="0">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <ItemsControl ItemsSource="{Binding Draft.OpenIssues}" Margin="0,0,0,6">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Converter={StaticResource BulletPrefix}}" FontSize="12" TextWrapping="Wrap"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="Photos" FontWeight="SemiBold" Margin="0,4,0,2"/>
+                                    <TextBlock Text="{Binding Draft.PhotoNote}" FontSize="12" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                                    <TextBlock Text="Section coverage" FontWeight="SemiBold" Margin="0,4,0,2"/>
+                                    <ItemsControl ItemsSource="{Binding Draft.Sections}" Margin="0,0,0,6">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock FontSize="12" TextWrapping="Wrap" Margin="0,0,0,2">
+                                                    <Run Text="{Binding Section, Mode=OneWay}" FontWeight="SemiBold"/>
+                                                    <Run Text=" · "/>
+                                                    <Run Text="{Binding Coverage, Mode=OneWay}"/>
+                                                </TextBlock>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,8"
+                        VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock Text="Export options" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <RadioButton Content="Readable HTML" GroupName="ReportFormat" IsChecked="True"
+                                     Tag="HTML" Checked="Format_Checked" Margin="0,0,0,2"
+                                     AutomationProperties.Name="HTML format"/>
+                        <TextBlock Text="Clean, formatted report for sharing with a technician" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="20,0,0,8" TextWrapping="Wrap"/>
+                        <RadioButton Content="JSON" GroupName="ReportFormat"
+                                     Tag="JSON" Checked="Format_Checked" Margin="0,0,0,2"
+                                     AutomationProperties.Name="JSON format"/>
+                        <TextBlock Text="Technical data for advanced users and support teams" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="20,0,0,8" TextWrapping="Wrap"/>
+                        <Button Content="Export selected format" Click="Export_Click"
+                                Margin="0,0,0,12"
+                                AutomationProperties.Name="Export report">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasDraft}" Value="False">
+                                            <Setter Property="IsEnabled" Value="False"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <TextBlock Text="Included" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                        <TextBlock Text="Sections in the report. Uncheck a finding to leave it out." FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                        <ItemsControl Margin="0,0,0,8" x:Name="IncludedList">
+                            <TextBlock Text="✓ Device summary" FontSize="12" Margin="0,0,0,2"/>
+                            <TextBlock Text="✓ Storage findings" FontSize="12" Margin="0,0,0,2"/>
+                            <TextBlock Text="✓ Devices and drivers" FontSize="12" Margin="0,0,0,2"/>
+                            <TextBlock Text="✓ Stability (crashes and warnings)" FontSize="12" Margin="0,0,0,2"/>
+                            <TextBlock Text="✓ Protection (threats and status)" FontSize="12" Margin="0,0,0,2"/>
+                            <TextBlock Text="✓ Recent actions" FontSize="12" Margin="0,0,0,2"/>
+                            <TextBlock Text="✓ Photos" FontSize="12" Margin="0,0,0,2"/>
+                        </ItemsControl>
+                        <TextBlock Text="Open questions in this report" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                        <ItemsControl ItemsSource="{Binding FindingSelections}" Margin="0,0,0,8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Issue}"
+                                              IsChecked="{Binding Included, Mode=TwoWay}"
+                                              FontSize="12" Margin="0,0,0,2"
+                                              AutomationProperties.Name="Include finding"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="Excluded" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                        <TextBlock Text="{Binding NotInReport}" FontSize="11" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+                        <Button Command="{Binding ReviewFindingsCommand}"
+                                AutomationProperties.Name="Review included findings">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Review included findings"/>
+                                <TextBlock Text="  ›" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
