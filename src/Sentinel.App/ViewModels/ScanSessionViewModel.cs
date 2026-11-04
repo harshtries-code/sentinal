@@ -194,6 +194,14 @@ public sealed class ScanSessionViewModel : ViewModelBase
             return;
         }
 
+        root = (root ?? string.Empty).Trim();
+        // On Windows, C: is relative to that drive's current directory.
+        // In the scope field a bare drive name means the drive root.
+        if (root.Length == 2 && char.IsAsciiLetter(root[0]) && root[1] == ':')
+        {
+            root += Path.DirectorySeparatorChar;
+        }
+
         int cap = balancedCapPercent ?? 25;
 
         // Stop any orphaned investigator from a previous scan (it may

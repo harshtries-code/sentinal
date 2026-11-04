@@ -14,3 +14,33 @@ appsettings.*.json
 .firecrawl/
 spikes/
 bench-tmp/
+
+# Local planning, evidence, design drafts, and test machines.
+/GOAL.md
+/goal/
+/audit/
+/design/
+/vm/
+[Ss]napshots/
+*.vdi
+*.vmdk
+*.vhd
+*.vhdx
+*.sav
+*.vbox
+*.vbox-prev
+*.ova
+*.ovf
+
+# Runtime data and credentials.
+.env.*
+secrets.json
+secrets.*.json
+settings.local.json
+*.db-wal
+*.db-shm
+*.key
+*.pem
+*.pfx
+*.p12
+*private*.xml

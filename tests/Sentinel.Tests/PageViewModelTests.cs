@@ -976,6 +976,20 @@ public sealed class PageViewModelTests : IDisposable
             File.ReadAllBytes(brokenPath));
     }
 
+    [Fact]
+    public void MainViewModel_DefaultScanRoot_IsSystemDrive_NotDocuments()
+    {
+        // The first scan must cover the whole PC (board 12: "All
+        // local volumes"): defaulting to Documents made the Storage
+        // map report a near-empty disk.
+        using var _ = OpenScanDb();
+        var main = new MainViewModel(OpenScanDb, new ImmediateDispatcher(), _dbPath);
+
+        string expected = Path.GetPathRoot(Environment.SystemDirectory)!;
+        Assert.Equal(expected, main.ScanRoot);
+        Assert.True(Directory.Exists(main.ScanRoot));
+    }
+
     [Theory]
     [InlineData(1001, "Crash")]
     [InlineData(41, "Crash")]

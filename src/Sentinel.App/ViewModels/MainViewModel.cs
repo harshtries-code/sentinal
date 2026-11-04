@@ -216,7 +216,10 @@ public sealed class MainViewModel : ViewModelBase
         RebuildDataCommand = new RelayCommand(_ => RebuildData());
         IsElevated = new WindowsPrincipal(WindowsIdentity.GetCurrent())
             .IsInRole(WindowsBuiltInRole.Administrator);
-        _scanRoot = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        // First-run scope is the whole system drive (board 12: "All
+        // local volumes"): a Documents-only default made Storage
+        // report a near-empty PC. Users can scope down via Browse.
+        _scanRoot = SystemScanRoot;
 
         // A08: read-only startup probe — a read-write open would
         // delete a corrupt store's -wal sidecar before the user
@@ -355,8 +358,21 @@ public sealed class MainViewModel : ViewModelBase
     public string ScanRoot
     {
         get => _scanRoot;
-        set => Set(ref _scanRoot, value);
+        set
+        {
+            if (Set(ref _scanRoot, value))
+            {
+                Raise(nameof(ScanActionLabel));
+            }
+        }
     }
+
+    public static string SystemScanRoot => Path.GetPathRoot(Environment.SystemDirectory) ?? @"C:\";
+
+    public string ScanActionLabel => string.Equals(
+        ScanRoot.Trim().TrimEnd('\\', '/'), SystemScanRoot.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase)
+        ? "Scan this PC"
+        : "Scan folder";
 
     // P21: priority-watch lifecycle. The window calls StartWatching
     // once; the settings toggle calls ApplyWatchSetting; OnClosed

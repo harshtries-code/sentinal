@@ -15,6 +15,8 @@ public readonly record struct PowerState(
     bool OnBattery,
     int BatteryPercent)
 {
+    public bool? HasBattery { get; init; }
+
     // Low battery means discharging AND under 20% (05 §6): a laptop
     // at 10% on the charger is charging, not stressed.
     public bool IsLowBattery =>
@@ -67,16 +69,18 @@ public sealed class WindowsBatteryProbe : IBatteryProbe
                 return PowerState.Unknown;
             }
 
-            bool onBattery = status.AcLineStatus == AcOffline
-                && status.BatteryFlag != BatteryNoBattery;
-            int percent = status.BatteryLifePercent is BatteryUnknown or > 100
+            bool? hasBattery = status.BatteryFlag == BatteryUnknown
+                ? null
+                : (status.BatteryFlag & BatteryNoBattery) == 0;
+            bool onBattery = status.AcLineStatus == AcOffline && hasBattery != false;
+            int percent = hasBattery == false || status.BatteryLifePercent > 100
                 ? -1
                 : status.BatteryLifePercent;
             return new PowerState(
                 Known: true,
                 BatterySaverOn: status.SystemStatusFlag != 0,
                 OnBattery: onBattery,
-                BatteryPercent: percent);
+                BatteryPercent: percent) { HasBattery = hasBattery };
         }
         catch
         {

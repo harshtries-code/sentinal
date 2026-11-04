@@ -16,6 +16,7 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _model;
     private readonly DispatcherTimer _statusTimer;
+    private readonly WindowsBatteryProbe _liveBattery = new();
     private readonly OverviewView _overviewView;
     private readonly PerformanceView _performanceView;
     private readonly CleanerView _cleanerView;
@@ -105,6 +106,10 @@ public partial class MainWindow : Window
                 _ = PageRefresh.Run(
                     _model.Overview.RefreshState,
                     _model.Overview.Collect, _model.Overview.Apply, "overview", uiScheduler);
+                if (ReferenceEquals(PageHost.Content, _cleanerView))
+                {
+                    RefreshStorage(uiScheduler);
+                }
             }
         };
 
@@ -113,6 +118,7 @@ public partial class MainWindow : Window
         {
             _model.Status.Refresh();
             _model.RefreshBanners();
+            RefreshLiveTelemetry();
         };
         _statusTimer.Start();
 
@@ -126,6 +132,7 @@ public partial class MainWindow : Window
             // RowKey only ever selects WITHIN the navigated page.
             if (action.Kind == "OpenPage")
             {
+                _model.Ask.Close();
                 NavigateToAskPage(action.Target);
                 if (action is { RowKey: not null, Target: "Crashes" })
                 {
@@ -248,7 +255,7 @@ public partial class MainWindow : Window
     {
         bool collapsed = e.NewSize.Width < 1100;
         _model.IsNavCollapsed = collapsed;
-        NavPanel.Width = collapsed ? 64 : 208;
+        NavPanel.Width = collapsed ? 64 : 216;
     }
 
     private void Settings_Click(object sender, RoutedEventArgs e)
@@ -300,6 +307,7 @@ public partial class MainWindow : Window
         {
             case 1:
                 PageHost.Content = _performanceView;
+                RefreshLiveTelemetry();
                 var perfHistory = _model.Status.SampleHistory();
                 _ = PageRefresh.Run(
                     _model.Performance.RefreshState,
@@ -308,11 +316,7 @@ public partial class MainWindow : Window
                 break;
             case 2:
                 PageHost.Content = _cleanerView;
-                _ = PageRefresh.Run(
-                    _model.Cleaner.RefreshState,
-                    () => CleanerViewModel.Collect(
-                        () => new SentinelDb(SentinelPaths.DatabasePath), _model.Settings.NeverTouch),
-                    _model.Cleaner.Apply, "storage", ui);
+                RefreshStorage(ui);
                 break;
             case 3:
                 PageHost.Content = _driversView;
@@ -351,6 +355,30 @@ public partial class MainWindow : Window
                     _model.Overview.Collect, _model.Overview.Apply, "overview", ui);
                 break;
         }
+    }
+
+    private void RefreshStorage(TaskScheduler ui)
+    {
+        _ = PageRefresh.Run(
+            _model.Cleaner.RefreshState,
+            () => CleanerViewModel.Collect(
+                () => new SentinelDb(SentinelPaths.DatabasePath), _model.Settings.NeverTouch),
+            _model.Cleaner.Apply, "storage", ui);
+    }
+
+    private void RefreshLiveTelemetry()
+    {
+        var power = _liveBattery.GetPowerState();
+        _model.Overview.UpdateLivePower(power);
+        if (PageHost.Content == _performanceView)
+        {
+            _model.Performance.UpdateLiveTelemetry(power, _model.Status.SampleHistory());
+        }
+    }
+
+    private void SystemDrive_Click(object sender, RoutedEventArgs e)
+    {
+        _model.ScanRoot = MainViewModel.SystemScanRoot;
     }
 
     private void Browse_Click(object sender, RoutedEventArgs e)

@@ -9,6 +9,7 @@
     <Color x:Key="Background">#000000</Color>
     <Color x:Key="Surface">#0D0D0D</Color>
     <Color x:Key="SurfaceRaised">#1A1A1A</Color>
+<Color x:Key="SurfaceNav">#0D0D0D</Color>
     <Color x:Key="Border">#8A8A8A</Color>
     <Color x:Key="Text">#FFFFFF</Color>
     <Color x:Key="TextSecondary">#E8E8E8</Color>
@@ -19,10 +20,12 @@
     <Color x:Key="WarningSoft">#3A2C10</Color>
     <Color x:Key="Danger">#FF8080</Color>
     <Color x:Key="Info">#A8C8E8</Color>
+<Color x:Key="InfoSoft">#0A2A4A</Color>
     <Color x:Key="OnAccent">#000000</Color>
     <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource Background}"/>
     <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource Surface}"/>
     <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="{StaticResource SurfaceRaised}"/>
+<SolidColorBrush x:Key="SurfaceNavBrush" Color="{StaticResource SurfaceNav}"/>
     <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource Border}"/>
     <SolidColorBrush x:Key="TextBrush" Color="{StaticResource Text}"/>
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondary}"/>
@@ -33,5 +36,6 @@
     <SolidColorBrush x:Key="WarningSoftBrush" Color="{StaticResource WarningSoft}"/>
     <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource Danger}"/>
     <SolidColorBrush x:Key="InfoBrush" Color="{StaticResource Info}"/>
+<SolidColorBrush x:Key="InfoSoftBrush" Color="{StaticResource InfoSoft}"/>
     <SolidColorBrush x:Key="OnAccentBrush" Color="{StaticResource OnAccent}"/>
 </ResourceDictionary>

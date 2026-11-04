@@ -1,4 +1,4 @@
-using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -22,22 +22,25 @@ public partial class PerformanceView : UserControl
     {
         if (_hooked is not null)
         {
-            _hooked.GraphPoints.CollectionChanged -= OnPointsChanged;
+            _hooked.PropertyChanged -= OnResourcesChanged;
             _hooked = null;
         }
 
         if (DataContext is PerformanceViewModel model)
         {
-            model.GraphPoints.CollectionChanged += OnPointsChanged;
+            model.PropertyChanged += OnResourcesChanged;
             _hooked = model;
         }
 
         RedrawGraph();
     }
 
-    private void OnPointsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnResourcesChanged(object? sender, PropertyChangedEventArgs e)
     {
-        RedrawGraph();
+        if (e.PropertyName == nameof(PerformanceViewModel.GraphPoints))
+        {
+            RedrawGraph();
+        }
     }
 
     private void GraphCanvas_SizeChanged(object sender, SizeChangedEventArgs e)

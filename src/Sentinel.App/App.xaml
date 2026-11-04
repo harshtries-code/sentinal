@@ -9,10 +9,12 @@
                 <!-- [0] is the swappable theme (Dark/Light); code-behind
                      replaces this entry on theme change. -->
                 <ResourceDictionary Source="Themes/Dark.xaml"/>
+                <ResourceDictionary Source="Themes/Icons.xaml"/>
                 <ResourceDictionary Source="Themes/Controls.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <local:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
             <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility"/>
+        <local:IconGeometryConverter x:Key="IconGeometry"/>
         <local:BulletPrefixConverter x:Key="BulletPrefix"/>
         <local:EqualityConverter x:Key="Equality"/>
         </ResourceDictionary>

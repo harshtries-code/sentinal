@@ -36,7 +36,7 @@ public sealed class AskPanelViewModel : ViewModelBase
         _aiEnabled = aiEnabled ?? (() => true);
         _cloud = cloud;
         ToggleCommand = new RelayCommand(_ => IsOpen = !IsOpen);
-        SubmitCommand = new RelayCommand(_ => Submit(), _ => !IsBusy);
+        SubmitCommand = new RelayCommand(_ => Submit(), _ => !IsBusy && !string.IsNullOrWhiteSpace(Question));
         ChipCommand = new RelayCommand(p => UseChip(p as string ?? string.Empty), _ => !IsBusy);
         CloseCommand = new RelayCommand(_ => Close(), _ => IsOpen);
         ActionCommand = new RelayCommand(action =>
@@ -155,8 +155,23 @@ public sealed class AskPanelViewModel : ViewModelBase
     public string Question
     {
         get => _question;
-        set => Set(ref _question, value);
+        set
+        {
+            if (Set(ref _question, value))
+            {
+                ((RelayCommand)SubmitCommand).RaiseCanExecuteChanged();
+            }
+        }
     }
+
+    private string _submittedQuestion = string.Empty;
+    public string SubmittedQuestion
+    {
+        get => _submittedQuestion;
+        private set => Set(ref _submittedQuestion, value);
+    }
+
+    public bool HasAnswer => Answer is not null;
 
     private AskAnswer? _answer;
 
@@ -171,6 +186,7 @@ public sealed class AskPanelViewModel : ViewModelBase
                 Raise(nameof(ActionLabel));
                 Raise(nameof(StatusLabel));
                 Raise(nameof(HasDetail));
+                Raise(nameof(HasAnswer));
             }
         }
     }
@@ -225,6 +241,7 @@ public sealed class AskPanelViewModel : ViewModelBase
             return;
         }
 
+        SubmittedQuestion = question;
         if (!_aiEnabled())
         {
             Answer = new AskAnswer(
@@ -265,17 +282,17 @@ public sealed class AskPanelViewModel : ViewModelBase
                         answer = CloudAnswer(cloud, context);
                         cloudOutcome = $"answered · sent {cloud.SentBytes / 1024.0:F1} KB";
                     }
-                    catch (OperationCanceledException)
+                    catch (OperationCanceledException) when (token.IsCancellationRequested)
                     {
                         throw;
                     }
                     catch (Exception ex) when (
-                        ex is ModelUnavailableException || ex is BudgetExhaustedException)
+                        ex is ModelUnavailableException or BudgetExhaustedException or OperationCanceledException)
                     {
                         // Outage honesty WITH utility: the failure
                         // is the fact, the deterministic guidance
                         // survives as expandable detail.
-                        string reason = ex is BudgetExhaustedException ? "time budget" : ex.Message;
+                        string reason = ex is BudgetExhaustedException or OperationCanceledException ? "time budget" : ex.Message;
                         answer = new AskAnswer(
                             AskEngine.Fact($"Couldn't reach the cloud model ({reason}). Your scan results are intact — try asking again."),
                             det.Evidence, det.Action, true, false,

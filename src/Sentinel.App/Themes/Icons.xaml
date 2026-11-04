@@ -1,0 +1,51 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Line icon set (reference boards, 24x24 stroke style).
+         Theme-independent geometry; stroke color is set at each use
+         site via the IconPath style and local Stroke overrides. -->
+    <StreamGeometry x:Key="IconLogo">M15.9 3.1 6.9 13.9h4.5l-2.2 6.9 9-10.8h-4.5z</StreamGeometry>
+    <StreamGeometry x:Key="IconHome">M3 10.6 12 3l9 7.6 M5.2 9.4V20a1 1 0 0 0 1 1h11.6a1 1 0 0 0 1-1V9.4 M9.2 21v-6.2h5.6V21</StreamGeometry>
+    <StreamGeometry x:Key="IconChart">M3 3v17.5a.5.5 0 0 0 .5.5h17 M8 16.5v-5 M13 16.5V7.5 M18 16.5v-8</StreamGeometry>
+    <StreamGeometry x:Key="IconHardDrive">M3 9.5 5.3 4h13.4L21 9.5V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M3 13.5h5.2l1.5 2.5h4.6l1.5-2.5H21 M17.5 16.8h.01</StreamGeometry>
+    <StreamGeometry x:Key="IconCpu">M7 7h10v10H7z M10 10h4v4h-4z M10 2.5V7 M14 2.5V7 M10 17v4.5 M14 17v4.5 M2.5 10H7 M2.5 14H7 M17 10h4.5 M17 14h4.5</StreamGeometry>
+    <StreamGeometry x:Key="IconShield">M12 3l7 2.8v5.4c0 4.4-2.9 8.3-7 9.8-4.1-1.5-7-5.4-7-9.8V5.8z M9.2 11.6l2 2 3.8-4.2</StreamGeometry>
+    <StreamGeometry x:Key="IconAlertTriangle">M10.8 4.4 3.2 17.6A2 2 0 0 0 5 20.5h14a2 2 0 0 0 1.8-2.9L13.2 4.4a1.35 1.35 0 0 0-2.4 0z M12 9.5v4.2 M12 16.9h.01</StreamGeometry>
+    <StreamGeometry x:Key="IconHistory">M3 12a9 9 0 1 0 2.6-6.4L3 8 M3 3v5h5 M12 7v5l3.2 2</StreamGeometry>
+    <StreamGeometry x:Key="IconClock">M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M12 7.5V12l3 2</StreamGeometry>
+    <StreamGeometry x:Key="IconFileText">M6 2.5h7.5l5 5v14H6z M13.5 2.5v5h5 M9 12.5h6 M9 16.5h6</StreamGeometry>
+    <StreamGeometry x:Key="IconFile">M6 2.5h7.5l5 5v14H6z M13.5 2.5v5h5</StreamGeometry>
+    <StreamGeometry x:Key="IconSettings">M12 9.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6 M12 2.8v3 M12 18.2v3 M2.8 12h3 M18.2 12h3 M5.2 5.2l2.1 2.1 M16.7 16.7l2.1 2.1 M18.8 5.2l-2.1 2.1 M7.3 16.7l-2.1 2.1</StreamGeometry>
+    <StreamGeometry x:Key="IconMonitor">M3 4.5h18V16H3z M9.5 20h5 M12 16v4</StreamGeometry>
+    <StreamGeometry x:Key="IconMessage">M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-3.8-.9L3 20l.9-5.7a8.5 8.5 0 1 1 17.1-2.8z</StreamGeometry>
+    <StreamGeometry x:Key="IconSearch">M11 5a6 6 0 1 0 0 12 6 6 0 0 0 0-12 M20.5 20.5 16.7 16.7</StreamGeometry>
+    <StreamGeometry x:Key="IconChevronRight">M9.5 5l7 7-7 7</StreamGeometry>
+    <StreamGeometry x:Key="IconChevronDown">M5 9.5l7 7 7-7</StreamGeometry>
+    <StreamGeometry x:Key="IconChevronUp">M5 14.5l7-7 7 7</StreamGeometry>
+    <StreamGeometry x:Key="IconCheckCircle">M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M8.6 12.3l2.4 2.4 4.5-5.2</StreamGeometry>
+    <StreamGeometry x:Key="IconCheck">M4.5 12.6l5 5L19.5 6.4</StreamGeometry>
+    <StreamGeometry x:Key="IconInfo">M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M12 11v5.2 M12 7.7h.01</StreamGeometry>
+    <StreamGeometry x:Key="IconPause">M9.5 5v14 M14.5 5v14</StreamGeometry>
+    <StreamGeometry x:Key="IconPlay">M7.5 4.8 19 12 7.5 19.2z</StreamGeometry>
+    <StreamGeometry x:Key="IconStop">M7 7h10v10H7z</StreamGeometry>
+    <StreamGeometry x:Key="IconX">M5.5 5.5l13 13 M18.5 5.5l-13 13</StreamGeometry>
+    <StreamGeometry x:Key="IconPlus">M12 5v14 M5 12h14</StreamGeometry>
+    <StreamGeometry x:Key="IconMinus">M5 12h14</StreamGeometry>
+    <StreamGeometry x:Key="IconMinusCircle">M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M8.2 12h7.6</StreamGeometry>
+    <StreamGeometry x:Key="IconDatabase">M12 3.2c4.7 0 8.5 1.2 8.5 2.8s-3.8 2.8-8.5 2.8-8.5-1.2-8.5-2.8S7.3 3.2 12 3.2 M3.5 6v12c0 1.6 3.8 2.8 8.5 2.8s8.5-1.2 8.5-2.8V6 M3.5 12c0 1.6 3.8 2.8 8.5 2.8s8.5-1.2 8.5-2.8</StreamGeometry>
+    <StreamGeometry x:Key="IconEye">M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12z M12 9.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6</StreamGeometry>
+    <StreamGeometry x:Key="IconFolder">M3 6.8A1.8 1.8 0 0 1 4.8 5h4.7l2.2 2.7h7.5A1.8 1.8 0 0 1 21 9.5v7.7a1.8 1.8 0 0 1-1.8 1.8H4.8A1.8 1.8 0 0 1 3 17.2z</StreamGeometry>
+    <StreamGeometry x:Key="IconActivity">M3 12h3.8l2.4-6.2 4.2 12 2.3-5.8H21</StreamGeometry>
+    <StreamGeometry x:Key="IconBattery">M4 7.8h13.6a1.6 1.6 0 0 1 1.6 1.6v5.2a1.6 1.6 0 0 1-1.6 1.6H4a1.6 1.6 0 0 1-1.6-1.6V9.4A1.6 1.6 0 0 1 4 7.8 M21.8 10.7v2.6 M6.2 10.7v2.6 M9.7 10.7v2.6</StreamGeometry>
+    <StreamGeometry x:Key="IconPower">M12 3v7.5 M6.2 6.3a8 8 0 1 0 11.6 0</StreamGeometry>
+    <StreamGeometry x:Key="IconRefresh">M21 12a9 9 0 1 1-2.6-6.4 M21 3v5.5h-5.5</StreamGeometry>
+    <StreamGeometry x:Key="IconLock">M5.5 11h13v9.5h-13z M8.5 11V7.8a3.5 3.5 0 0 1 7 0V11 M12 14.8v2</StreamGeometry>
+    <StreamGeometry x:Key="IconZap">M13 2.8 5 13.6h5.4L9.2 21.2 19 10.4h-5.4z</StreamGeometry>
+    <StreamGeometry x:Key="IconCamera">M4 8h3l2-2.5h6L17 8h3a1.5 1.5 0 0 1 1.5 1.5V18A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18V9.5A1.5 1.5 0 0 1 4 8z M12 10a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2</StreamGeometry>
+    <StreamGeometry x:Key="IconTrash">M4 6.5h16 M9.5 6V4h5v2 M6.5 6.5l1 13h9l1-13 M10 10.5v6 M14 10.5v6</StreamGeometry>
+    <StreamGeometry x:Key="IconUndo">M8.6 5.6 4.2 10l4.4 4.4 M4.2 10H14a5.8 5.8 0 0 1 0 11.6h-2.8</StreamGeometry>
+    <StreamGeometry x:Key="IconGraph">M6 4.6a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8 M17.5 6.1a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8 M9.5 16.1a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8 M7.6 7.2 15.8 7.8 M7 8.2l1.6 6.2 M15.9 9.6l-4.7 5</StreamGeometry>
+    <StreamGeometry x:Key="IconList">M9.5 6.5H20 M9.5 12H20 M9.5 17.5H20 M4.2 6.5h.01 M4.2 12h.01 M4.2 17.5h.01</StreamGeometry>
+    <StreamGeometry x:Key="IconGauge">M4.5 19a9.5 9.5 0 1 1 15 0 M12 14.5 15.8 8 M12 13a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3</StreamGeometry>
+    <StreamGeometry x:Key="IconSend">M21.5 2.8 11 13.3 M21.5 2.8 14.8 21.2l-3.8-7.9-7.9-3.8z</StreamGeometry>
+    <StreamGeometry x:Key="IconSparkle">M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z M19 16.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z</StreamGeometry>
+</ResourceDictionary>

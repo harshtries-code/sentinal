@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using Sentinel.App.Services;
 using Sentinel.Engine.Scan;
 using Sentinel.Engine.SystemInventory;
 using Sentinel.Store;
@@ -77,7 +78,33 @@ public sealed class PerformanceViewModel : ViewModelBase
 
     public ObservableCollection<DiskCard> DiskCards { get; } = [];
 
-    public ObservableCollection<GraphPoint> GraphPoints { get; } = [];
+    private IReadOnlyList<GraphPoint> _graphPoints = [];
+    public IReadOnlyList<GraphPoint> GraphPoints
+    {
+        get => _graphPoints;
+        private set => Set(ref _graphPoints, value);
+    }
+
+    private string _liveBattery = "Reading battery charge…";
+    public string LiveBattery
+    {
+        get => _liveBattery;
+        private set => Set(ref _liveBattery, value);
+    }
+
+    private string _systemMemory = "Reading PC memory…";
+    public string SystemMemory
+    {
+        get => _systemMemory;
+        private set => Set(ref _systemMemory, value);
+    }
+
+    public void UpdateLiveTelemetry(PowerState power, IReadOnlyList<ResourceSample> history)
+    {
+        LiveBattery = LiveTelemetry.BatteryLine(power);
+        SystemMemory = LiveTelemetry.ReadSystemMemory();
+        UpdateResources(history);
+    }
 
     private IReadOnlyList<ResourceSample> _history = [];
 
@@ -649,22 +676,23 @@ public sealed class PerformanceViewModel : ViewModelBase
 
         CrashTrend = s.CrashTrend;
         BootLine = s.BootLine;
-        _history = s.History;
-        var latest = s.History.Count == 0 ? null : s.History[s.History.Count - 1];
+        UpdateResources(s.History);
+        RefreshState.NoteSuccess();
+    }
+
+    private void UpdateResources(IReadOnlyList<ResourceSample> history)
+    {
+        _history = history;
+        var latest = history.Count == 0 ? null : history[history.Count - 1];
         CpuNow = latest is null ? "—" : $"{latest.CpuPercent:F1}%";
         MemoryNow = latest is null ? "—" : $"{latest.RamMb:F0} MB";
         IoNow = latest is null ? "—" : FormatIo(latest.IoReadMb, latest.IoWriteMb);
         Reslice();
-        RefreshState.NoteSuccess();
     }
 
     private void Reslice()
     {
-        GraphPoints.Clear();
-        foreach (var point in SliceHistory(_history, SelectedRange))
-        {
-            GraphPoints.Add(point);
-        }
+        GraphPoints = SliceHistory(_history, SelectedRange);
     }
 
     internal static string BuildMachineLine()

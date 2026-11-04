@@ -1,4 +1,4 @@
-<Window x:Class="Sentinel.App.Views.ConfirmSheetWindow"
+<Window x:Class="Sentinel.App.Views.ConfirmSheetWindow" Style="{StaticResource SentinelWindow}"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Confirm action" Height="600" Width="680"

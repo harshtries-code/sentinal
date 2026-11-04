@@ -7,6 +7,7 @@
     <Color x:Key="Background">#F5F7F9</Color>
     <Color x:Key="Surface">#FFFFFF</Color>
     <Color x:Key="SurfaceRaised">#EDF2F5</Color>
+    <Color x:Key="SurfaceNav">#FFFFFF</Color>
     <Color x:Key="Border">#CAD3DB</Color>
     <Color x:Key="Text">#15202B</Color>
     <Color x:Key="TextSecondary">#506070</Color>
@@ -17,11 +18,13 @@
     <Color x:Key="WarningSoft">#F5E6C8</Color>
     <Color x:Key="Danger">#AD2633</Color>
     <Color x:Key="Info">#345A78</Color>
+    <Color x:Key="InfoSoft">#D7E5F5</Color>
     <!-- Deep teal takes white text (handoff §4). -->
     <Color x:Key="OnAccent">#FFFFFF</Color>
     <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource Background}"/>
     <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource Surface}"/>
     <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="{StaticResource SurfaceRaised}"/>
+    <SolidColorBrush x:Key="SurfaceNavBrush" Color="{StaticResource SurfaceNav}"/>
     <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource Border}"/>
     <SolidColorBrush x:Key="TextBrush" Color="{StaticResource Text}"/>
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondary}"/>
@@ -32,5 +35,6 @@
     <SolidColorBrush x:Key="WarningSoftBrush" Color="{StaticResource WarningSoft}"/>
     <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource Danger}"/>
     <SolidColorBrush x:Key="InfoBrush" Color="{StaticResource Info}"/>
+    <SolidColorBrush x:Key="InfoSoftBrush" Color="{StaticResource InfoSoft}"/>
     <SolidColorBrush x:Key="OnAccentBrush" Color="{StaticResource OnAccent}"/>
 </ResourceDictionary>

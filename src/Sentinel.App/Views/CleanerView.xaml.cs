@@ -67,6 +67,7 @@ public partial class CleanerView : UserControl
         }
 
         var soft = (Brush)FindResource("AccentSoftBrush");
+        var infoSoft = (Brush)FindResource("InfoSoftBrush");
         var raised = (Brush)FindResource("SurfaceRaisedBrush");
         var stroke = (Brush)FindResource("BorderBrush");
         var ink = (Brush)FindResource("TextBrush");
@@ -77,7 +78,14 @@ public partial class CleanerView : UserControl
         foreach (var box in boxes)
         {
             var category = model.Treemap.First(c => c.Key == box.Key);
-            bool neutral = category.Key is "Windows" or "Other";
+            // Board 02 palette: teal for Applications/User files,
+            // blue for Windows, gray for Other.
+            Brush fill = category.Key switch
+            {
+                "Windows" => infoSoft,
+                "Other" => raised,
+                _ => soft,
+            };
             // P22: category boxes drill the table down to their
             // folders — except "Other", a complement with no prefix.
             bool scopable = category.Key is not "Other";
@@ -85,7 +93,7 @@ public partial class CleanerView : UserControl
             {
                 Width = Math.Max(0, box.Width - 1),
                 Height = Math.Max(0, box.Height - 1),
-                Fill = neutral ? raised : soft,
+                Fill = fill,
                 Opacity = 0.45 + 0.55 * (max <= 0 ? 0 : (double)category.Bytes / max),
                 Stroke = stroke,
                 StrokeThickness = 1,
@@ -289,6 +297,15 @@ public partial class CleanerView : UserControl
         if (DataContext is CleanerViewModel model)
         {
             model.BeginVaultAction();
+        }
+    }
+
+    // Board 02 detail drawer: the X returns the drawer to its hint.
+    private void Deselect_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is CleanerViewModel model)
+        {
+            model.SelectedRow = null;
         }
     }
 

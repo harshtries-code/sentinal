@@ -10,6 +10,19 @@ public partial class AskPanelView : UserControl
     public AskPanelView()
     {
         InitializeComponent();
+        IsVisibleChanged += (_, _) =>
+        {
+            if (IsVisible)
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    if (IsVisible)
+                    {
+                        QuestionBox.Focus();
+                    }
+                }));
+            }
+        };
     }
 
     // Raised when the answer's single action button is pressed. The

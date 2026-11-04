@@ -2,34 +2,42 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel>
-        <Grid Margin="0,0,0,8">
+        <!-- Page header (board 04). -->
+        <Grid Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
-                <TextBlock Text="Drivers &amp; devices" FontSize="20" FontWeight="SemiBold"/>
-                <TextBlock Text="{Binding MachineLine}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <TextBlock Text="Drivers &amp; devices" Style="{StaticResource PageTitle}"/>
+                <TextBlock Text="{Binding MachineLine}" FontSize="13" Margin="0,2,0,0"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
                 <!-- P28: diagnostic boundaries, always visible. -->
-                <TextBlock Text="{Binding Boundaries}" TextWrapping="Wrap" FontSize="12"
+                <TextBlock Text="{Binding Boundaries}" TextWrapping="Wrap" FontSize="12" Margin="0,2,0,0"
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            AutomationProperties.Name="Diagnostic boundaries"/>
             </StackPanel>
-            <Button Grid.Column="1" Content="Refresh inventory" Click="Refresh_Click" Padding="10,4"
-                    Margin="0,0,8,0" VerticalAlignment="Center"
-                    AutomationProperties.Name="Refresh inventory"/>
+            <Button Grid.Column="1" Click="Refresh_Click" Padding="12,7"
+                    Margin="0,0,10,0" VerticalAlignment="Center"
+                    AutomationProperties.Name="Refresh inventory">
+                <StackPanel Orientation="Horizontal">
+                    <Path Data="{StaticResource IconRefresh}" Style="{StaticResource IconPath}"
+                          Width="15" Height="15" Stroke="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="Refresh inventory" Margin="7,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
             <TextBlock Grid.Column="2" Text="{Binding LiveLine}" VerticalAlignment="Center"
                        Foreground="{DynamicResource TextSecondaryBrush}"/>
         </Grid>
 
         <!-- A09: refresh fault line (collapsed while fresh). -->
         <TextBlock Style="{StaticResource RefreshErrorLine}" Text="{Binding RefreshState.Error}"/>
-            <TextBlock Style="{StaticResource RefreshLoadingLine}" Text="{Binding RefreshState.LoadingText}"/>
+        <TextBlock Style="{StaticResource RefreshLoadingLine}" Text="{Binding RefreshState.LoadingText}"/>
 
-        <!-- Attention banner (amber) or calm state (neutral). -->
-        <Border BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1" CornerRadius="8"
-                Background="{DynamicResource WarningSoftBrush}" Padding="12,8" Margin="0,0,0,8">
+        <!-- Attention banner (board 04: amber) or calm state. -->
+        <Border BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1" CornerRadius="10"
+                Background="{DynamicResource WarningSoftBrush}" Padding="16,12" Margin="0,0,0,12">
             <Border.Style>
                 <Style TargetType="Border">
                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -42,22 +50,27 @@
             </Border.Style>
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="{Binding Summary}" FontWeight="SemiBold"/>
-                    <TextBlock Text="Review the devices below for driver issues." FontSize="12"
+                <Path Grid.Column="0" Data="{StaticResource IconAlertTriangle}" Width="30" Height="30"
+                      Stroke="{DynamicResource WarningBrush}" StrokeThickness="1.7"
+                      StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                      Fill="Transparent" Stretch="Uniform" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Summary}" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="Review the devices below for driver issues." FontSize="12.5" Margin="0,2,0,0"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </StackPanel>
-                <TextBlock Grid.Column="1" Text="{Binding DriverCountLine}" VerticalAlignment="Center"
+                <TextBlock Grid.Column="2" Text="{Binding DriverCountLine}" VerticalAlignment="Center" TextAlignment="Right"
+                           FontWeight="SemiBold"
                            Foreground="{DynamicResource TextSecondaryBrush}"/>
             </Grid>
         </Border>
-        <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
-                Background="{DynamicResource SurfaceBrush}" Padding="12,8" Margin="0,0,0,8">
+        <Border Padding="16,12" Margin="0,0,0,12">
             <Border.Style>
-                <Style TargetType="Border">
+                <Style TargetType="Border" BasedOn="{StaticResource Card}">
                     <Setter Property="Visibility" Value="Visible"/>
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding HasProblems}" Value="True">
@@ -71,7 +84,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="{Binding Summary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="{Binding Summary}" FontSize="14" VerticalAlignment="Center"/>
                 <TextBlock Grid.Column="1" Text="{Binding DriverCountLine}" VerticalAlignment="Center"
                            Foreground="{DynamicResource TextSecondaryBrush}"/>
             </Grid>
@@ -87,78 +100,135 @@
             <!-- Devices table + topology tabs. No driver-packages
                  tab: no collector backs it (retained plan). -->
             <TabControl Grid.Column="0" AutomationProperties.Name="Driver sections">
-                <TabItem Header="Devices" AutomationProperties.Name="Devices tab">
+                <TabItem AutomationProperties.Name="Devices tab">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconMonitor}" Style="{StaticResource IconPath}" Width="15" Height="15" VerticalAlignment="Center"/>
+                            <TextBlock Text="Devices" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                            <Button Content="{Binding ChipAll}" Click="ChipAll_Click" Padding="10,2" Margin="0,0,6,0"
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <Button Content="{Binding ChipAll}" Click="ChipAll_Click" Padding="12,5" Margin="0,0,6,0"
                                     AutomationProperties.Name="Show all devices">
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ProblemsOnly}" Value="False">
                                                 <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Button.Style>
                             </Button>
-                            <Button Content="{Binding ChipProblems}" Click="ChipProblems_Click" Padding="10,2" Margin="0,0,6,0"
+                            <Button Content="{Binding ChipProblems}" Click="ChipProblems_Click" Padding="12,5" Margin="0,0,6,0"
                                     AutomationProperties.Name="Show problem devices">
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ProblemsOnly}" Value="True">
                                                 <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Button.Style>
                             </Button>
                             <CheckBox Content="Show disconnected devices" IsChecked="{Binding ShowDisconnected, Mode=TwoWay}"
-                                      VerticalAlignment="Center" Margin="6,0,0,0"
+                                      VerticalAlignment="Center" Margin="8,0,0,0"
                                       AutomationProperties.Name="Show disconnected devices"/>
                         </StackPanel>
                         <DataGrid ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
                                   Height="330" AutomationProperties.Name="Devices">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Device" Binding="{Binding Device}" Width="*"/>
+                                <DataGridTemplateColumn Header="Device" Width="*" SortMemberPath="Device">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Path Data="{StaticResource IconMonitor}" Style="{StaticResource IconPath}"
+                                                      Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Device}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="100"/>
                                 <DataGridTextColumn Header="Publisher" Binding="{Binding Publisher}" Width="*"/>
-                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="170">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding StatusKind}" Value="Problem">
-                                                    <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding StatusKind}" Value="Phantom">
-                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
+                                <DataGridTemplateColumn Header="Status" Width="180" SortMemberPath="Status">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Path Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center">
+                                                    <Path.Style>
+                                                        <Style TargetType="Path" BasedOn="{StaticResource IconPath}">
+                                                            <Setter Property="Data" Value="{StaticResource IconCheckCircle}"/>
+                                                            <Setter Property="Stroke" Value="{DynamicResource AccentBrush}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding StatusKind}" Value="Problem">
+                                                                    <Setter Property="Data" Value="{StaticResource IconAlertTriangle}"/>
+                                                                    <Setter Property="Stroke" Value="{DynamicResource WarningBrush}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding StatusKind}" Value="Phantom">
+                                                                    <Setter Property="Data" Value="{StaticResource IconMinusCircle}"/>
+                                                                    <Setter Property="Stroke" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Path.Style>
+                                                </Path>
+                                                <TextBlock Text="{Binding Status}" VerticalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding StatusKind}" Value="Problem">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding StatusKind}" Value="Phantom">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                     </StackPanel>
                 </TabItem>
-                <TabItem Header="Disk topology" AutomationProperties.Name="Disk topology tab">
+                <TabItem AutomationProperties.Name="Disk topology tab">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconHardDrive}" Style="{StaticResource IconPath}" Width="15" Height="15" VerticalAlignment="Center"/>
+                            <TextBlock Text="Disk topology" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
                     <StackPanel>
-                        <TextBlock Text="Physical disks and volumes." Margin="0,0,0,4"
+                        <TextBlock Text="Physical disks and volumes. Select a disk or volume to view details." Margin="0,0,0,4"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <TextBlock Text="{Binding ChkdskLine}" Margin="0,0,0,8" TextWrapping="Wrap"
+                        <TextBlock Text="{Binding ChkdskLine}" Margin="0,0,0,10" TextWrapping="Wrap" FontSize="12"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    AutomationProperties.Name="Filesystem check history"/>
                         <ItemsControl ItemsSource="{Binding Topology}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
-                                            Background="{DynamicResource SurfaceBrush}" Padding="12,8" Margin="0,0,0,8">
+                                    <Border Style="{StaticResource Card}" Padding="14,12" Margin="0,0,0,10">
                                         <StackPanel>
-                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
-                                            <TextBlock Text="{Binding Sub}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
-                                            <ItemsControl ItemsSource="{Binding Partitions}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Path Data="{StaticResource IconHardDrive}" Style="{StaticResource IconPath}"
+                                                      Width="20" Height="20" VerticalAlignment="Center"/>
+                                                <StackPanel Margin="9,0,0,0">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13.5"/>
+                                                    <TextBlock Text="{Binding Sub}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <ItemsControl ItemsSource="{Binding Partitions}" Margin="0,10,0,0">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
                                                         <WrapPanel Orientation="Horizontal"/>
@@ -168,7 +238,7 @@
                                                     <DataTemplate>
                                                         <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6"
                                                                 Background="{DynamicResource SurfaceRaisedBrush}"
-                                                                Padding="10,6" Margin="0,0,6,6" MinWidth="150">
+                                                                Padding="10,7" Margin="0,0,6,6" MinWidth="150">
                                                             <StackPanel>
                                                                 <TextBlock Text="{Binding Label}" FontWeight="SemiBold" FontSize="12"/>
                                                                 <TextBlock Text="{Binding Sub}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
@@ -177,7 +247,7 @@
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>
-                                            <TextBlock Text="{Binding StatusLine}" FontSize="12" Margin="0,2,0,0">
+                                            <TextBlock Text="{Binding StatusLine}" FontSize="12" Margin="0,4,0,0">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
@@ -211,10 +281,9 @@
                 </TabItem>
             </TabControl>
 
-            <!-- Device drawer: record fields + copy. No report or
-                 vendor actions: no backends back them (planned). -->
-            <Border Grid.Column="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
-                    Background="{DynamicResource SurfaceBrush}" Padding="12" VerticalAlignment="Top"
+            <!-- Device drawer (board 04): record fields + note + copy.
+                 No report or vendor actions: no backends back them. -->
+            <Border Grid.Column="2" Style="{StaticResource Card}" VerticalAlignment="Top"
                     AutomationProperties.Name="Device detail">
                 <Grid>
                     <TextBlock Text="Select a device to inspect it." FontStyle="Italic"
@@ -241,25 +310,61 @@
                                 </Style.Triggers>
                             </Style>
                         </StackPanel.Style>
-                        <TextBlock Text="{Binding Device}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding Status}" FontSize="12" Margin="0,0,0,8">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconCpu}" Style="{StaticResource IconPath}"
+                                  Width="20" Height="20" VerticalAlignment="Top" Margin="0,1,8,0"/>
+                            <TextBlock Text="{Binding Device}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Border CornerRadius="8" Padding="10,8" Margin="0,10,0,12">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding StatusKind}" Value="Problem">
-                                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding StatusKind}" Value="Phantom">
-                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                            <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
+                            </Border.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <Path Width="17" Height="17" VerticalAlignment="Center" Margin="0,0,8,0">
+                                    <Path.Style>
+                                        <Style TargetType="Path" BasedOn="{StaticResource IconPath}">
+                                            <Setter Property="Data" Value="{StaticResource IconCheckCircle}"/>
+                                            <Setter Property="Stroke" Value="{DynamicResource AccentBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding StatusKind}" Value="Problem">
+                                                    <Setter Property="Data" Value="{StaticResource IconAlertTriangle}"/>
+                                                    <Setter Property="Stroke" Value="{DynamicResource WarningBrush}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding StatusKind}" Value="Phantom">
+                                                    <Setter Property="Data" Value="{StaticResource IconMinusCircle}"/>
+                                                    <Setter Property="Stroke" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Path.Style>
+                                </Path>
+                                <TextBlock Text="{Binding Status}" FontWeight="SemiBold" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding StatusKind}" Value="Problem">
+                                                    <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding StatusKind}" Value="Phantom">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
                         <Grid Margin="0,0,0,4">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="92"/>
+                                <ColumnDefinition Width="96"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
@@ -270,37 +375,46 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Instance ID" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Device instance ID" FontSize="12" Margin="0,0,0,7" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Detail.InstanceId}" FontSize="12" FontFamily="{DynamicResource MonoFont}" TextWrapping="Wrap"/>
                             <Button Grid.Row="0" Grid.Column="2" Content="Copy" Click="CopyInstance_Click" Padding="8,1" Margin="6,0,0,0"
                                     AutomationProperties.Name="Copy instance ID"/>
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Driver version" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Driver version" FontSize="12" Margin="0,0,0,7" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Detail.Version}" FontSize="12"/>
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Publisher" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Publisher" FontSize="12" Margin="0,0,0,7" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Detail.Publisher}" FontSize="12"/>
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Evidence" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Evidence source" FontSize="12" Margin="0,0,0,7" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Detail.Source}" FontSize="12"/>
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Observed" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Observation time" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Detail.Observed}" FontSize="12"/>
                         </Grid>
-                        <TextBlock Text="A problem code identifies the symptom, not its cause. Further investigation may be needed." FontSize="12"
-                                   Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,8"/>
-                        <Button Content="Copy details" Click="CopyDetails_Click" Padding="10,4"
+                        <Border Background="{DynamicResource InfoSoftBrush}" CornerRadius="8" Padding="10,8" Margin="0,8,0,12">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconInfo}" Style="{StaticResource IconPath}"
+                                      Width="16" Height="16" Stroke="{DynamicResource InfoBrush}" VerticalAlignment="Top" Margin="0,1,8,0"/>
+                                <TextBlock Text="A problem code identifies the symptom, not its cause. Further investigation may be needed to determine the root cause." FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                        <Button Content="Copy details" Click="CopyDetails_Click" Padding="12,6"
+                                Style="{StaticResource AccentOutlineButton}"
                                 AutomationProperties.Name="Copy device details"/>
                     </StackPanel>
                 </Grid>
             </Border>
         </Grid>
 
-        <!-- D43: update/rollback for the selected device. Checks are
-             read-only; changes confirm in the driver sheet. Hidden
-             when actions aren't wired (honestly read-only). -->
-        <Border Margin="0,8,0,0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                CornerRadius="8" Background="{DynamicResource SurfaceBrush}" Padding="12,8"
+        <!-- Driver update/rollback for the selected device. Checks
+             are read-only; changes confirm in the driver sheet.
+             Hidden when actions aren't wired (honestly read-only). -->
+        <Border Style="{StaticResource Card}" Margin="0,12,0,0"
                 Visibility="{Binding ActionsAvailable, Converter={StaticResource BoolToVisibility}}">
             <StackPanel>
-                <TextBlock Text="Driver updates" FontWeight="SemiBold"/>
-                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <Path Data="{StaticResource IconRefresh}" Style="{StaticResource IconPath}" Width="17" Height="17" VerticalAlignment="Center"/>
+                    <TextBlock Text="Driver updates" Style="{StaticResource SectionTitle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                     <Button Content="Check for updates" Click="CheckUpdates_Click" Padding="10,4"
                             Margin="0,0,8,0" IsEnabled="{Binding CanCheckUpdates}"
                             AutomationProperties.Name="Check for driver updates"/>
@@ -311,7 +425,7 @@
                             IsEnabled="{Binding CanOpenUpdateSheet}"
                             AutomationProperties.Name="Review driver update"/>
                 </StackPanel>
-                <TextBlock Text="{Binding UpdateStateLine}" Margin="0,6,0,0" TextWrapping="Wrap"
+                <TextBlock Text="{Binding UpdateStateLine}" Margin="0,6,0,0" TextWrapping="Wrap" FontSize="12.5"
                            Foreground="{DynamicResource TextSecondaryBrush}"/>
                 <ListBox ItemsSource="{Binding UpdateCandidates}" MaxHeight="120" Margin="0,6,0,0"
                          AutomationProperties.Name="Update candidates">
@@ -349,11 +463,14 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <TextBlock Text="{Binding OemSetLine}" Margin="0,6,0,0" TextWrapping="Wrap"
+                <TextBlock Text="{Binding OemSetLine}" Margin="0,6,0,0" TextWrapping="Wrap" FontSize="12.5"
                            Foreground="{DynamicResource TextSecondaryBrush}"/>
 
-                <TextBlock Text="Rollback" FontWeight="SemiBold" Margin="0,12,0,0"/>
-                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                    <Path Data="{StaticResource IconUndo}" Style="{StaticResource IconPath}" Width="17" Height="17" VerticalAlignment="Center"/>
+                    <TextBlock Text="Rollback" Style="{StaticResource SectionTitle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                     <Button Content="Check for rollback target" Click="CheckRollback_Click" Padding="10,4"
                             Margin="0,0,8,0" IsEnabled="{Binding CanCheckRollback}"
                             AutomationProperties.Name="Check for rollback target"/>
@@ -361,7 +478,7 @@
                             IsEnabled="{Binding CanOpenRollbackSheet}"
                             AutomationProperties.Name="Review driver rollback"/>
                 </StackPanel>
-                <TextBlock Text="{Binding RollbackStateLine}" Margin="0,6,0,0" TextWrapping="Wrap"
+                <TextBlock Text="{Binding RollbackStateLine}" Margin="0,6,0,0" TextWrapping="Wrap" FontSize="12.5"
                            Foreground="{DynamicResource TextSecondaryBrush}"/>
                 <ListBox ItemsSource="{Binding RollbackCandidates}" MaxHeight="100" Margin="0,6,0,0"
                          AutomationProperties.Name="Rollback candidates">

@@ -3,16 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel>
         <!-- Page header (board 01): title + machine line left, last
-             scan right. Scan actions live in the global header only —
-             one scan surface, no duplicate triggers. -->
-        <Grid Margin="0,0,0,8">
+             scan right. Scan actions live in the global header. -->
+        <Grid Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
-                <TextBlock Text="Overview" FontSize="20" FontWeight="SemiBold"/>
-                <TextBlock Text="{Binding MachineLine}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <TextBlock Text="Overview" Style="{StaticResource PageTitle}"/>
+                <TextBlock Text="{Binding MachineLine}" FontSize="13" Margin="0,2,0,0"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
             </StackPanel>
             <TextBlock Grid.Column="1" Text="{Binding LastScanLine}" VerticalAlignment="Center"
                        Foreground="{DynamicResource TextSecondaryBrush}"/>
@@ -20,56 +20,77 @@
 
         <!-- A09: refresh fault line (collapsed while fresh). -->
         <TextBlock Style="{StaticResource RefreshErrorLine}" Text="{Binding RefreshState.Error}"/>
-            <TextBlock Style="{StaticResource RefreshLoadingLine}" Text="{Binding RefreshState.LoadingText}"/>
+        <TextBlock Style="{StaticResource RefreshLoadingLine}" Text="{Binding RefreshState.LoadingText}"/>
 
-        <!-- Hero: last scan state. -->
-        <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
-                Background="{DynamicResource SurfaceBrush}" Padding="12" Margin="0,0,0,8">
+        <!-- Hero: last scan state (board 01 teal banner). -->
+        <Border CornerRadius="10" BorderThickness="1" Padding="16,14" Margin="0,0,0,10"
+                Background="{DynamicResource AccentSoftBrush}"
+                BorderBrush="{DynamicResource AccentBrush}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20" Margin="0,0,12,0">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding HeroIsOk}" Value="False">
-                                    <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <TextBlock FontSize="20" FontWeight="Bold"
-                               HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Text" Value="✓"/>
-                                <Setter Property="Foreground" Value="{DynamicResource AccentInkBrush}"/>
+                <Grid Grid.Column="0" Width="44" Height="44" Margin="0,0,14,0" VerticalAlignment="Center">
+                    <Ellipse>
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="{DynamicResource AccentBrush}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding HeroIsOk}" Value="False">
-                                        <Setter Property="Text" Value="!"/>
-                                        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                        <Setter Property="Fill" Value="{DynamicResource WarningBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <Path Data="{StaticResource IconCheck}" Width="22" Height="22"
+                          Stroke="{DynamicResource OnAccentBrush}" StrokeThickness="2.4"
+                          StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                          Fill="Transparent" Stretch="Uniform">
+                        <Path.Style>
+                            <Style TargetType="Path">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HeroIsOk}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Path.Style>
+                    </Path>
+                    <TextBlock Text="!" FontSize="22" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Foreground="{DynamicResource OnAccentBrush}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HeroIsOk}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                </Border>
+                </Grid>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding HeroTitle}" FontSize="16" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding HeroDetail}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding HeroTitle}" FontSize="17" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding HeroDetail}" FontSize="13" Margin="0,2,0,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                 </StackPanel>
-                <Button Grid.Column="2" Content="Review coverage ›" Click="Coverage_Click"
-                        Style="{StaticResource LinkButton}" VerticalAlignment="Center"
-                        AutomationProperties.Name="Review coverage"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="1" Background="{DynamicResource BorderBrush}" Margin="0,0,14,0"/>
+                    <Button Content="Review coverage ›" Click="Coverage_Click"
+                            Style="{StaticResource LinkButton}" VerticalAlignment="Center"
+                            AutomationProperties.Name="Review coverage"/>
+                </StackPanel>
             </Grid>
         </Border>
 
         <!-- Six organ cards (board 01). Each navigates to its page. -->
-        <ItemsControl ItemsSource="{Binding Organs}" Margin="0,0,0,8">
+        <ItemsControl ItemsSource="{Binding Organs}" Margin="0,0,0,10">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <UniformGrid Columns="6"/>
@@ -77,73 +98,127 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Button Margin="0,0,6,0" Padding="8" HorizontalContentAlignment="Stretch"
+                    <Button Margin="0,0,8,0" Padding="12" HorizontalContentAlignment="Stretch"
+                            Background="{DynamicResource SurfaceBrush}"
                             Command="{Binding DataContext.OpenPageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                             CommandParameter="{Binding PageIndex}"
                             AutomationProperties.Name="{Binding Title}"
                             ToolTip="{Binding Detail}">
                         <StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <Border Width="24" Height="24" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}">
-                                    <TextBlock Text="{Binding Badge}" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource AccentInkBrush}"/>
-                                </Border>
-                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"/>
-                                <TextBlock Text="›" VerticalAlignment="Center" Margin="4,0,0,0"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            </StackPanel>
-                            <TextBlock Text="{Binding Detail}" FontSize="12" Margin="0,4,0,0"
-                                       Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Path Grid.Column="0" Width="21" Height="21" VerticalAlignment="Center"
+                                      Data="{Binding Title, Converter={StaticResource IconGeometry}}"
+                                      Style="{StaticResource IconPath}"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="SemiBold" FontSize="13.5"
+                                           VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                <Path Grid.Column="2" Data="{StaticResource IconChevronRight}"
+                                      Style="{StaticResource IconPath}" Width="14" Height="14" VerticalAlignment="Center"/>
+                            </Grid>
+                            <Grid Margin="0,9,0,0" MinHeight="32">
+                                <TextBlock Text="{Binding Detail}" FontSize="12" TextWrapping="Wrap">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsGood}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
                         </StackPanel>
                     </Button>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <Grid Margin="0,0,0,8">
+        <Grid Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="3*"/>
-                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="10"/>
                 <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Findings to review. -->
-            <Border Grid.Column="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
-                    Background="{DynamicResource SurfaceBrush}" Padding="12">
+            <!-- Findings to review (board 01 table). -->
+            <Border Grid.Column="0" Style="{StaticResource Card}">
                 <StackPanel>
-                    <TextBlock Text="Findings to review" FontSize="14" FontWeight="SemiBold"/>
-                    <TextBlock Text="Items that need your attention from this scan." FontSize="12"
-                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                    <TextBlock Text="Findings to review" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="Items that need your attention from this scan."
+                               Style="{StaticResource SectionCaption}" Margin="0,2,0,10"/>
+                    <Grid Margin="28,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="64"/>
+                            <ColumnDefinition Width="52"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Finding" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Grid.Column="1" Text="Details" FontSize="11" Margin="0,0,8,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Grid.Column="2" Text="Module" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Grid.Column="3" Text="Evidence" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </Grid>
                     <ItemsControl ItemsSource="{Binding Findings}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,0,0,6">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="70"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{Binding Subtitle}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
-                                    </StackPanel>
-                                    <Border Grid.Column="1" Background="{DynamicResource AccentSoftBrush}" CornerRadius="6"
-                                            Padding="8,2" Margin="0,0,8,0" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Pill}" FontSize="12" Foreground="{DynamicResource AccentInkBrush}"/>
-                                    </Border>
-                                    <TextBlock Grid.Column="2" Text="{Binding Module}" FontSize="12" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <Button Grid.Column="3" Content="View ›" Style="{StaticResource LinkButton}" VerticalAlignment="Center"
-                                            Command="{Binding DataContext.OpenPageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                            CommandParameter="{Binding PageIndex}"
-                                            AutomationProperties.Name="View finding"/>
-                                </Grid>
+                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="28"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="64"/>
+                                            <ColumnDefinition Width="52"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Path Grid.Column="0" Width="18" Height="18" VerticalAlignment="Center">
+                                            <Path.Style>
+                                                <Style TargetType="Path" BasedOn="{StaticResource IconPath}">
+                                                    <Setter Property="Data" Value="{StaticResource IconFile}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Module}" Value="Storage">
+                                                            <Setter Property="Data" Value="{StaticResource IconFolder}"/>
+                                                            <Setter Property="Stroke" Value="{DynamicResource WarningBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Module}" Value="Drivers">
+                                                            <Setter Property="Data" Value="{StaticResource IconCpu}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Module}" Value="Stability">
+                                                            <Setter Property="Data" Value="{StaticResource IconFileText}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Module}" Value="Threats">
+                                                            <Setter Property="Data" Value="{StaticResource IconShield}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Path.Style>
+                                        </Path>
+                                        <StackPanel Grid.Column="1" Margin="0,0,8,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Subtitle}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="2" Style="{StaticResource WarningPill}" Margin="0,0,8,0">
+                                            <TextBlock Text="{Binding Pill}" Style="{StaticResource PillText}"
+                                                       Foreground="{DynamicResource WarningBrush}"/>
+                                        </Border>
+                                        <TextBlock Grid.Column="3" Text="{Binding Module}" FontSize="12.5" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <Button Grid.Column="4" Content="View ›" Style="{StaticResource LinkButton}" VerticalAlignment="Center"
+                                                Command="{Binding DataContext.OpenPageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding PageIndex}"
+                                                AutomationProperties.Name="View finding"/>
+                                    </Grid>
+                                </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     <TextBlock Text="No review items — nothing needs attention right now."
-                               Foreground="{DynamicResource TextSecondaryBrush}" FontStyle="Italic">
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontStyle="Italic" Margin="0,6,0,0">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -159,34 +234,73 @@
             </Border>
 
             <!-- Evidence relationships: possible links only, dashed,
-                 never confirmed (board 01, 09 §14 Task 8 rule). -->
-            <Border Grid.Column="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
-                    Background="{DynamicResource SurfaceBrush}" Padding="12">
+                 never confirmed (board 01). -->
+            <Border Grid.Column="2" Style="{StaticResource Card}">
                 <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Evidence relationships" FontSize="14" FontWeight="SemiBold"/>
-                        <Button Grid.Column="1" Content="Graph" Click="Graph_Click" Padding="10,2" Margin="0,0,4,0"
-                                AutomationProperties.Name="Graph view"/>
-                        <Button Grid.Column="2" Content="List" Click="List_Click" Padding="10,2" Margin="0,0,8,0"
-                                AutomationProperties.Name="List view"/>
-                        <!-- U21: graph zoom (pan is the scrollbars below). -->
-                        <Button Grid.Column="3" Content="A−" Command="{Binding ZoomOutCommand}" Padding="8,2" Margin="0,0,4,0"
-                                AutomationProperties.Name="Zoom out graph"/>
-                        <Button Grid.Column="4" Content="A+" Command="{Binding ZoomInCommand}" Padding="8,2" Margin="0,0,4,0"
-                                AutomationProperties.Name="Zoom in graph"/>
-                        <Button Grid.Column="5" Content="100%" Command="{Binding ZoomResetCommand}" Padding="8,2"
-                                AutomationProperties.Name="Reset graph zoom"/>
+                        <TextBlock Grid.Column="0" Text="Evidence relationships" Style="{StaticResource SectionTitle}"
+                                   VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="7" Background="{DynamicResource SurfaceRaisedBrush}" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <Button Click="Graph_Click" Padding="9,4" Margin="0" MinHeight="0" BorderThickness="0"
+                                        AutomationProperties.Name="Graph view">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding RelationsGraphView}" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="{StaticResource IconGraph}" Style="{StaticResource IconPath}"
+                                              Width="13" Height="13" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Graph" FontSize="12" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Click="List_Click" Padding="9,4" Margin="0" MinHeight="0" BorderThickness="0"
+                                        AutomationProperties.Name="List view">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding RelationsGraphView}" Value="False">
+                                                    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="{StaticResource IconList}" Style="{StaticResource IconPath}"
+                                              Width="13" Height="13" VerticalAlignment="Center"/>
+                                        <TextBlock Text="List" FontSize="12" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
                     </Grid>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
+                        <Button Content="A−" Command="{Binding ZoomOutCommand}" Padding="7,3" Margin="0,0,4,0" MinHeight="0"
+                                AutomationProperties.Name="Zoom out graph"/>
+                        <Button Content="A+" Command="{Binding ZoomInCommand}" Padding="7,3" Margin="0,0,4,0" MinHeight="0"
+                                AutomationProperties.Name="Zoom in graph"/>
+                        <Button Content="100%" Command="{Binding ZoomResetCommand}" Padding="7,3" MinHeight="0"
+                                AutomationProperties.Name="Reset graph zoom"/>
+                    </StackPanel>
                     <TextBlock Text="Related items from this scan. This is a possible relationship, not a confirmed diagnosis."
-                               FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                               Style="{StaticResource SectionCaption}" Margin="0,4,0,10"/>
                     <Grid x:Name="GraphHost">
                         <Grid.Style>
                             <Style TargetType="Grid">
@@ -204,7 +318,7 @@
                         </Grid.Style>
                         <StackPanel>
                             <TextBlock Text="— Possible relationship —" FontSize="11" HorizontalAlignment="Center"
-                                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
                             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                                           MaxHeight="260" AutomationProperties.Name="Relationship graph">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -215,30 +329,39 @@
                                             Command="{Binding InspectClusterCommand}" CommandParameter="{Binding FirstCluster}"
                                             AutomationProperties.Name="Inspect relationship">
                                         <StackPanel Orientation="Horizontal">
-                                            <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="6"
-                                                    Padding="8,6" MinWidth="90" Background="{DynamicResource SurfaceBrush}">
+                                            <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="8"
+                                                    Padding="10,8" MinWidth="100" Background="{DynamicResource SurfaceBrush}">
                                                 <StackPanel>
-                                                    <TextBlock Text="{Binding FirstCluster.DeviceLabel}" FontWeight="SemiBold" FontSize="12" TextAlignment="Center" TextWrapping="Wrap"/>
+                                                    <Path Data="{StaticResource IconHardDrive}" Style="{StaticResource IconPath}"
+                                                          Width="20" Height="20" HorizontalAlignment="Center"
+                                                          Stroke="{DynamicResource AccentBrush}"/>
+                                                    <TextBlock Text="{Binding FirstCluster.DeviceLabel}" FontWeight="SemiBold" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" Margin="0,4,0,0"/>
                                                     <TextBlock Text="{Binding FirstCluster.DiskDetail}" FontSize="11" TextAlignment="Center"
                                                                Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                                                 </StackPanel>
                                             </Border>
                                             <TextBlock Text="┄┄›" VerticalAlignment="Center" Margin="4,0"
                                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                            <Border BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1" CornerRadius="6"
-                                                    Padding="8,6" MinWidth="90" Background="{DynamicResource SurfaceBrush}">
+                                            <Border BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1" CornerRadius="8"
+                                                    Padding="10,8" MinWidth="100" Background="{DynamicResource SurfaceBrush}">
                                                 <StackPanel>
-                                                    <TextBlock Text="Disk events" FontWeight="SemiBold" FontSize="12" TextAlignment="Center"/>
+                                                    <Path Data="{StaticResource IconActivity}" Style="{StaticResource IconPath}"
+                                                          Width="20" Height="20" HorizontalAlignment="Center"
+                                                          Stroke="{DynamicResource WarningBrush}"/>
+                                                    <TextBlock Text="Disk events" FontWeight="SemiBold" FontSize="12" TextAlignment="Center" Margin="0,4,0,0"/>
                                                     <TextBlock Text="{Binding FirstCluster.EventCount, StringFormat='{}{0} events'}" FontSize="11" TextAlignment="Center"
                                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                                                 </StackPanel>
                                             </Border>
                                             <TextBlock Text="┄┄›" VerticalAlignment="Center" Margin="4,0"
                                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                            <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="6"
-                                                    Padding="8,6" MinWidth="90" Background="{DynamicResource SurfaceBrush}">
+                                            <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="8"
+                                                    Padding="10,8" MinWidth="100" Background="{DynamicResource SurfaceBrush}">
                                                 <StackPanel>
-                                                    <TextBlock Text="Newest report" FontWeight="SemiBold" FontSize="12" TextAlignment="Center"/>
+                                                    <Path Data="{StaticResource IconFileText}" Style="{StaticResource IconPath}"
+                                                          Width="20" Height="20" HorizontalAlignment="Center"
+                                                          Stroke="{DynamicResource AccentBrush}"/>
+                                                    <TextBlock Text="Newest report" FontWeight="SemiBold" FontSize="12" TextAlignment="Center" Margin="0,4,0,0"/>
                                                     <TextBlock Text="{Binding FirstCluster.NewestSummary}" FontSize="11" TextAlignment="Center"
                                                                Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                                                 </StackPanel>
@@ -318,85 +441,119 @@
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="10"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Scan coverage. -->
-            <Border Grid.Column="0" x:Name="CoverageSection" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
-                    Background="{DynamicResource SurfaceBrush}" Padding="12">
+            <!-- Scan coverage (board 01). -->
+            <Border Grid.Column="0" x:Name="CoverageSection" Style="{StaticResource Card}">
                 <StackPanel>
-                    <TextBlock Text="Scan coverage" FontSize="14" FontWeight="SemiBold"/>
-                    <TextBlock Text="Status of areas checked during this scan." FontSize="12"
-                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                    <TextBlock Text="Scan coverage" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="Status of areas checked during this scan."
+                               Style="{StaticResource SectionCaption}" Margin="0,2,0,10"/>
                     <ItemsControl ItemsSource="{Binding Coverage}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,0,0,4">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{Binding Area}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding Status}" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsOk}" Value="False">
-                                                        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                    <Button Grid.Column="2" Content="Details ›" Style="{StaticResource LinkButton}" VerticalAlignment="Center"
-                                            Command="{Binding DataContext.OpenPageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                            CommandParameter="{Binding PageIndex}"
-                                            AutomationProperties.Name="Coverage details"/>
-                                </Grid>
+                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,7">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="26"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Path Grid.Column="0" Width="17" Height="17" VerticalAlignment="Center"
+                                              Data="{Binding Area, Converter={StaticResource IconGeometry}}"
+                                              Style="{StaticResource IconPath}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Area}" FontSize="13" VerticalAlignment="Center"/>
+                                        <Grid Grid.Column="2" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,7,0">
+                                            <Ellipse>
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Setter Property="Fill" Value="{DynamicResource AccentBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsOk}" Value="False">
+                                                                <Setter Property="Fill" Value="{DynamicResource WarningBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+                                            <Path Data="{StaticResource IconCheck}" Width="9" Height="9"
+                                                  Stroke="{DynamicResource OnAccentBrush}" StrokeThickness="2.2"
+                                                  StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                  Fill="Transparent" Stretch="Uniform"/>
+                                        </Grid>
+                                        <TextBlock Grid.Column="3" Text="{Binding Status}" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,10,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsOk}" Value="False">
+                                                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <Button Grid.Column="4" Content="Details ›" Style="{StaticResource LinkButton}" VerticalAlignment="Center"
+                                                Command="{Binding DataContext.OpenPageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding PageIndex}"
+                                                AutomationProperties.Name="Coverage details"/>
+                                    </Grid>
+                                </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
             </Border>
 
-            <!-- Recent activity. -->
-            <Border Grid.Column="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
-                    Background="{DynamicResource SurfaceBrush}" Padding="12">
+            <!-- Recent activity (board 01 timeline). -->
+            <Border Grid.Column="2" Style="{StaticResource Card}">
                 <StackPanel>
-                    <TextBlock Text="Recent activity" FontSize="14" FontWeight="SemiBold"/>
-                    <TextBlock Text="Latest scans and investigations." FontSize="12"
-                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                    <TextBlock Text="Recent activity" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="Latest scans and investigations."
+                               Style="{StaticResource SectionCaption}" Margin="0,2,0,10"/>
                     <ItemsControl ItemsSource="{Binding Activity}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button HorizontalContentAlignment="Stretch" Margin="0,0,0,4" Padding="4"
+                                <Button HorizontalContentAlignment="Stretch" Margin="0" Padding="6,7"
+                                        Background="Transparent" BorderThickness="0"
                                         Command="{Binding DataContext.OpenPageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                         CommandParameter="6"
                                         AutomationProperties.Name="{Binding Title}">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="44"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding Time}" FontFamily="{DynamicResource MonoFont}" FontSize="12"
-                                                   VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12"/>
+                                        <Border Grid.Column="0" Width="22" Height="22" CornerRadius="11" VerticalAlignment="Center"
+                                                Background="{DynamicResource AccentSoftBrush}">
+                                            <Path Data="{StaticResource IconCheck}" Width="11" Height="11"
+                                                  Stroke="{DynamicResource AccentBrush}" StrokeThickness="2.2"
+                                                  StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                  Fill="Transparent" Stretch="Uniform"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Grid.Column="1" Text="{Binding Time}" FontFamily="{DynamicResource MonoFont}" FontSize="11.5"
+                                                   VerticalAlignment="Center" Margin="8,0"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12.5"/>
                                             <TextBlock Text="{Binding Detail}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
-                                        <TextBlock Grid.Column="2" Text="›" VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <Path Grid.Column="3" Data="{StaticResource IconChevronRight}"
+                                              Style="{StaticResource IconPath}" Width="14" Height="14" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Button>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     <TextBlock Text="No activity yet — scans and investigations will appear here."
-                               Foreground="{DynamicResource TextSecondaryBrush}" FontStyle="Italic">
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontStyle="Italic" Margin="0,6,0,0">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Collapsed"/>

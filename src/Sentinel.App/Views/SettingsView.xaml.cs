@@ -13,6 +13,28 @@ public partial class SettingsView : UserControl
         InitializeComponent();
     }
 
+    // Board 09: left-rail section switch (presentation only — every
+    // control keeps its existing binding inside its section).
+    private void SectionNav_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (SectionScanning is null)
+        {
+            return;
+        }
+
+        var panels = new[]
+        {
+            SectionScanning, SectionAi, SectionPrivacy,
+            SectionSafety, SectionAppearance, SectionAbout,
+        };
+        for (int i = 0; i < panels.Length; i++)
+        {
+            panels[i].Visibility = i == SectionNav.SelectedIndex
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+    }
+
     private void ExportJson_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is SettingsViewModel vm)

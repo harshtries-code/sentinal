@@ -196,7 +196,7 @@ public static class AskEngine
 
         var s = context.LastScan;
         return new AskAnswer(
-            Fact($"Your last scan covered {FormatBytes(s.BytesSeen)} in {s.FilesSeen} files; per-folder breakdowns arrive with the Storage page."),
+            Fact($"Your last scan covered {FormatBytes(s.BytesSeen)} in {s.FilesSeen} files. Open Storage for the folder breakdown."),
             [
                 new AskEvidenceChip("bytes seen", FormatBytes(s.BytesSeen)),
                 new AskEvidenceChip("files", s.FilesSeen.ToString()),

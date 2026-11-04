@@ -1,5 +1,7 @@
 using System.Runtime.InteropServices;
+using Sentinel.App.Services;
 using Sentinel.Engine.CrashDoctor;
+using Sentinel.Engine.Scan;
 using Sentinel.Engine.SystemInventory;
 using Sentinel.Store;
 
@@ -303,6 +305,10 @@ public sealed class OverviewViewModel : ViewModelBase
         }
 
         Organs = BuildOrgans(s);
+        if (_livePower is { } power)
+        {
+            UpdateLivePower(power);
+        }
         Findings = BuildFindings(s);
         Raise(nameof(HasFindings));
         Clusters = BuildClusters(s.DiskWarnings.Records, s.Topology.Records);
@@ -324,6 +330,21 @@ public sealed class OverviewViewModel : ViewModelBase
         catch (Exception ex)
         {
             return CollectionResult<T>.Fail("overview", ex.GetType().Name);
+        }
+    }
+
+    private PowerState? _livePower;
+
+    public void UpdateLivePower(PowerState power)
+    {
+        _livePower = power;
+        string detail = LiveTelemetry.BatteryLine(power);
+        bool good = power.HasBattery == false || power.BatteryPercent >= 0 && !power.IsLowBattery;
+        if (Organs.Any(card => card.Title == "Power" && (card.Detail != detail || card.IsGood != good)))
+        {
+            Organs = Organs.Select(card => card.Title == "Power"
+                ? card with { Detail = detail, IsGood = good }
+                : card).ToArray();
         }
     }
 
