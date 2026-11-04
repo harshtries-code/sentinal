@@ -15,7 +15,7 @@
 
 Sentinel is a Windows desktop app for investigating storage, performance, crashes, drivers, and security signals. It shows what Windows reported, explains why a finding matters, and points to the evidence so you can decide what to check next.
 
-**Status:** Development preview for Windows 11. Download the [portable Windows x64 ZIP](https://github.com/harshtries-code/sentinal/releases/download/windows-preview-2026-11-04/sentinel-windows-x64.zip) or build from source.
+**Status:** Development preview for Windows 11. [Download the ready-to-run Windows x64 ZIP](https://github.com/harshtries-code/sentinal/releases/download/windows-preview-2026-11-04/sentinel-windows-x64-self-contained.zip) or build from source.
 
 ## Watch the demo
 
@@ -37,7 +37,9 @@ Threats brings Windows security evidence into the investigation. Microsoft Defen
 
 ## Run Sentinel
 
-To use the portable ZIP, install the [.NET 8 Desktop Runtime for Windows x64](https://dotnet.microsoft.com/en-us/download/dotnet/8.0), extract the entire archive, and open `Sentinel.App.exe` from the extracted folder.
+Extract the entire ready-to-run ZIP and open `Sentinel.App.exe` from the extracted folder. The Windows x64 package includes the .NET 8 Desktop Runtime.
+
+If you already have the [.NET 8 Desktop Runtime for Windows x64](https://dotnet.microsoft.com/en-us/download/dotnet/8.0), you can use the [smaller portable ZIP](https://github.com/harshtries-code/sentinal/releases/download/windows-preview-2026-11-04/sentinel-windows-x64.zip).
 
 ### Build and launch on Windows
 
