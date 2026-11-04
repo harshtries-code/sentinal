@@ -19,9 +19,9 @@ Sentinel is a Windows desktop app for investigating storage, performance, crashe
 
 ## Watch the demo
 
-[![Sentinel design preview showing the Storage screen and a flagged file](assets/sentinel-demo-preview.jpg)](https://github.com/harshtries-code/sentinal/releases/download/design-preview/sentinel-demo.mp4)
+[![Sentinel explainer preview showing how Ask Sentinel answers a question about the last scan](assets/sentinel-demo-preview.jpg)](https://github.com/harshtries-code/sentinal/releases/download/project-explainer/sentinel-explainer.mp4)
 
-[Download the 30-second demo (1080p MP4)](https://github.com/harshtries-code/sentinal/releases/download/design-preview/sentinel-demo.mp4). The film uses the reference UI and sample data to show the intended experience. The interface in the development build may differ.
+[Download the three-minute explainer (1080p MP4)](https://github.com/harshtries-code/sentinal/releases/download/project-explainer/sentinel-explainer.mp4). The opening explains why we built Sentinel, how its Windows collectors and optional cloud AI work together, and how Ask Sentinel links an answer to scan evidence. The walkthrough uses labeled reference screens and sample data.
 
 ## What you can explore
 
